@@ -36,9 +36,10 @@
     }
   },
   "packs": [],
-  "url": "",
-  "manifest": "",
-  "download": "",
+  "url": "https://github.com/Bobby-Jo8555686/brigandyne2appv2",
+  "manifest": "https://raw.githubusercontent.com/Bobby-Jo8555686/brigandyne2appv2/main/system.json",
+  "download": "https://github.com/Bobby-Jo8555686/brigandyne2appv2/archive/refs/heads/main.zip",
   "license": "",
   "readme": ""
+
 }
