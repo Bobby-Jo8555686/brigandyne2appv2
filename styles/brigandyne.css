@@ -371,3 +371,33 @@ body.vtt {
 .brigandyne-roll .weapon-damage.success-box, .brigandyne2-roll .weapon-damage.success-box { border-color: #1a5b1a; }
 .brigandyne-roll .weapon-damage.crit-box, .brigandyne2-roll .weapon-damage.crit-box { border-color: #d4af37; box-shadow: inset 0 0 8px rgba(212, 175, 55, 0.3); }
 .brigandyne-roll .weapon-damage.counter-attack-box, .brigandyne2-roll .weapon-damage.counter-attack-box { border-color: #ff5252; background: rgba(139, 0, 0, 0.3); }
+/* ========================================== */
+/* VERROUILLAGE DE LA FICHE                   */
+/* ========================================== */
+
+/* On bloque tous les champs de texte et listes déroulantes SAUF la vie, le SF et le destin */
+.brigandyne2appv2.actor.locked input:not([name="system.vitalite.value"]):not([name="system.sangfroid.value"]):not([name="system.destin.value"]),
+.brigandyne2appv2.actor.locked select {
+    pointer-events: none;
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    appearance: none;
+}
+
+/* On cache les boutons pour supprimer ou ajouter des objets */
+.brigandyne2appv2.actor.locked [data-action="createItem"],
+.brigandyne2appv2.actor.locked [data-action="deleteItem"] {
+    display: none !important;
+}
+
+/* Style du cadenas */
+.lock-btn {
+    cursor: pointer;
+    font-size: 1.2em;
+    margin-left: 10px;
+    transition: transform 0.2s;
+}
+
+.lock-btn:hover {
+    transform: scale(1.2);
+}
