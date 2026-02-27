@@ -262,7 +262,25 @@ export class BrigandyneItemSheet extends HandlebarsApplicationMixin(ItemSheetV2)
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
         });
-
+        // ==========================================
+    // DRAG & DROP UNIVERSEL (V12 & V13)
+    // ==========================================
+    if (this.isEditable) {
+        // 1. On autorise le survol de la fiche
+        this.element.ondragover = (event) => {
+            event.preventDefault();
+        };
+        
+        // 2. On intercepte le "lâcher"
+        this.element.ondrop = (event) => {
+            event.preventDefault();
+            // 🛑 LE BOUCLIER ANTI-CLONES POUR LA V13 EST ICI :
+            event.stopPropagation(); 
+            
+            // On appelle ta fonction personnalisée !
+            this._onDrop(event);
+        };
+    }
         // C. Actions
         html.find('.spell-delete, [data-action="deleteSpell"]').click(ev => {
             const index = ev.currentTarget.dataset.index;
