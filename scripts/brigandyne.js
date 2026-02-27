@@ -6,6 +6,26 @@ import { PersonnageData, PnjData } from "./datamodels.mjs";
 Hooks.once("init", async function() {
     console.log("Brigandyne | Chargement du système en AppV2 et DataModels !");
 
+// ==========================================
+    // 0. PARAMÈTRES DU SYSTÈME (SETTINGS)
+    // ==========================================
+    game.settings.register("brigandyne2appv2", "sbireOneHit", {
+        name: "Sbires vaincus en un coup",
+        hint: "Règle optionnelle (Cinématique) : Si cette case est cochée, le moindre point de dégât subi par un PNJ de type Sbire réduira ses PV à 0 instantanément.",
+        scope: "world",      
+        config: true,        
+        type: Boolean,
+        default: true        
+    });
+    game.settings.register("brigandyne2appv2", "enableTokenHUD", {
+        name: "Actions rapides sur les Tokens (HUD)",
+        hint: "Affiche automatiquement les armes et les sorts du personnage à côté du menu circulaire lors d'un clic droit sur son Token.",
+        scope: "client",     // "client" permet à chaque joueur de choisir son propre confort d'interface !
+        config: true,        
+        type: Boolean,
+        default: true        // Activé par défaut, comme tu le souhaites
+    });
+
     // ==========================================
     // 1. CLASSES ET DONNÉES (DATAMODELS)
     // ==========================================
@@ -83,4 +103,73 @@ Hooks.once("init", async function() {
         "systems/brigandyne2appv2/templates/actor/parts/magic.hbs",
         "systems/brigandyne2appv2/templates/actor/parts/biography.hbs"
     ]);
+    // ==========================================
+    // TOKEN HUD : ACTIONS RAPIDES (Armes & Sorts)
+    // ==========================================
+    Hooks.on("renderTokenHUD", (hud, html, tokenData) => {
+        if (!game.settings.get("brigandyne2appv2", "enableTokenHUD")) return;
+        const actor = hud.object?.actor;
+        if (!actor) return;
+
+        // Récupérer les armes et les sorts du personnage
+        const armes = actor.items.filter(i => i.type === "arme");
+        const sorts = actor.items.filter(i => i.type === "sort");
+
+        // S'il n'a ni arme ni sort, on ne fait rien
+        if (armes.length === 0 && sorts.length === 0) return;
+
+        // Création d'une nouvelle colonne à droite du HUD
+        let actionCol = $(`<div class="col right brigandyne-hud-col" style="right: -190px; width: 180px; top: 0; position: absolute; display: flex; flex-direction: column; gap: 4px; z-index: 100;"></div>`);
+
+        // --- SECTION ARMES ---
+        if (armes.length > 0) {
+            actionCol.append(`<div style="color: white; font-weight: bold; border-bottom: 2px solid #8b0000; text-align: center; text-transform: uppercase; font-size: 0.8em; margin-bottom: 4px; text-shadow: 1px 1px 2px black;">⚔️ Armes</div>`);
+            
+            armes.forEach(arme => {
+                actionCol.append(`
+                    <div class="control-icon brigandyne-action" data-type="weapon" data-id="${arme.id}" title="${arme.name}" style="width: 100%; display: flex; align-items: center; justify-content: flex-start; padding: 2px 5px; border-radius: 5px; background: rgba(0,0,0,0.7); border: 1px solid #444; margin: 0; box-sizing: border-box; cursor: pointer; transition: background 0.2s;">
+                        <img src="${arme.img}" style="width: 24px; height: 24px; border: none; margin-right: 8px; border-radius: 3px;">
+                        <span style="color: white; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Georgia', serif;">${arme.name}</span>
+                    </div>
+                `);
+            });
+        }
+
+        // --- SECTION MAGIE ---
+        if (sorts.length > 0) {
+            actionCol.append(`<div style="color: white; font-weight: bold; border-bottom: 2px solid #4a6491; text-align: center; text-transform: uppercase; font-size: 0.8em; margin-top: 8px; margin-bottom: 4px; text-shadow: 1px 1px 2px black;">✨ Magie</div>`);
+            
+            sorts.forEach(sort => {
+                actionCol.append(`
+                    <div class="control-icon brigandyne-action" data-type="spell" data-id="${sort.id}" title="${sort.name}" style="width: 100%; display: flex; align-items: center; justify-content: flex-start; padding: 2px 5px; border-radius: 5px; background: rgba(0,0,0,0.7); border: 1px solid #444; margin: 0; box-sizing: border-box; cursor: pointer; transition: background 0.2s;">
+                        <img src="${sort.img}" style="width: 24px; height: 24px; border: none; margin-right: 8px; border-radius: 3px;">
+                        <span style="color: white; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Georgia', serif;">${sort.name}</span>
+                    </div>
+                `);
+            });
+        }
+
+        // Action au clic sur un bouton
+        actionCol.find('.brigandyne-action').click(async (ev) => {
+            ev.preventDefault();
+            const type = ev.currentTarget.dataset.type;
+            const itemId = ev.currentTarget.dataset.id;
+            
+            // Déclenche la fonction native de ton actor.js !
+            if (type === "weapon") await actor.rollWeapon(itemId);
+            if (type === "spell") await actor.rollSpell(itemId);
+            
+            // Optionnel : ferme le HUD après avoir cliqué pour nettoyer l'écran
+            hud.clear(); 
+        });
+
+        // Petit effet au survol de la souris
+        actionCol.find('.brigandyne-action').hover(
+            function() { $(this).css("background", "rgba(139, 0, 0, 0.8)"); },
+            function() { $(this).css("background", "rgba(0, 0, 0, 0.7)"); }
+        );
+
+        // Injection dans le HTML du HUD
+        html.append(actionCol);
+    });
 });
