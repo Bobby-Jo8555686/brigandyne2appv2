@@ -76,8 +76,21 @@ export class BrigandyneActor extends Actor {
         if (this.type === "personnage") {
             system.vitalite.max = Math.floor(stats.for.total / 5) + Math.floor(stats.end.total / 5) + stats.vol.indice + originVitBonus;
             system.sangfroid.max = Math.floor(stats.vol.total / 5) + Math.floor(stats.cns.total / 5) + stats.com.indice + originSfBonus;
-        } else if (this.type === "pnj") {
-            system.vitalite.max = Math.floor(stats.for.total / 5) + Math.floor(stats.end.total / 10);
+	} else if (this.type === "pnj") {
+            // 1. Calcul complet (comme les PJ) pour les Boss, Créatures
+            let vitMax = Math.floor(stats.for.total / 5) + Math.floor(stats.end.total / 5) + stats.vol.indice;
+            let sfMax = Math.floor(stats.vol.total / 5) + Math.floor(stats.cns.total / 5) + stats.com.indice;
+
+            // 2. Règle stricte du livre pour les "PNJ mineurs" (Sbires)
+            if (system.type_pnj === "sbire"|| system.type_pnj === "intermediaire") {
+                // (FOR/5) + (END/10) et pas de bonus de Volonté
+                vitMax = Math.floor(stats.for.total / 5) + Math.floor(stats.end.total / 10);
+                
+                sfMax = Math.floor(sfMax / 2); 
+            }
+
+            system.vitalite.max = vitMax;
+            system.sangfroid.max = sfMax;
         }
         
         let initBase = stats.com.indice + stats.mou.indice + stats.per.indice;
@@ -728,7 +741,8 @@ export class BrigandyneActor extends Actor {
                     let noteSbire = "";
                     try {
                         let nouvelleVie = targetActor.system.vitalite.value - degatsFinaux;
-                        if (targetActor.type === "pnj" && targetActor.system.type_pnj === "sbire" && degatsFinaux > 0) {
+                        // On vérifie d'abord si l'option du MJ est activée !
+                        if (game.settings.get("brigandyne2appv2", "sbireOneHit") && targetActor.type === "pnj" && targetActor.system.type_pnj === "sbire" && degatsFinaux > 0) {
                             nouvelleVie = 0; noteSbire = "<br><span style='color: #ffcccc; font-weight: bold;'>💥 Le sbire est vaincu sur le coup !</span>";
                         }
                         await targetActor.update({ "system.vitalite.value": Math.max(0, nouvelleVie) });
@@ -766,7 +780,8 @@ export class BrigandyneActor extends Actor {
                 let protection = Number(this.system.protection?.value) || 0;
                 let degatsFinaux = Math.max(0, degatsBruts - protection);
                 let noteSbire = ""; let nouvelleVie = this.system.vitalite.value - degatsFinaux;
-                if (this.type === "pnj" && this.system.type_pnj === "sbire" && degatsFinaux > 0) {
+                // On vérifie l'option ici aussi
+                if (game.settings.get("brigandyne2appv2", "sbireOneHit") && this.type === "pnj" && this.system.type_pnj === "sbire" && degatsFinaux > 0) {
                     nouvelleVie = 0; noteSbire = "<br><span style='color: #ffcccc; font-weight: bold;'>💥 Le sbire est fauché par la contre-attaque !</span>";
                 }
                 await this.update({ "system.vitalite.value": Math.max(0, nouvelleVie) });
