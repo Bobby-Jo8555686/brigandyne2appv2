@@ -1,6 +1,12 @@
 <header class="sheet-header-actor">
     <img class="actor-profile-img cursor-pointer" src="{{actor.img}}" data-action="editImage" data-edit="img" title="{{actor.name}}"/>
-    
+    <a class="lock-btn" data-action="toggleLock" title="Verrouiller/Déverrouiller la fiche">
+    {{#if isLocked}}
+        <i class="fas fa-lock" style="color: #8b0000;"></i>
+    {{else}}
+        <i class="fas fa-lock-open" style="color: #1a5b1a;"></i>
+    {{/if}}
+    </a>
     <div class="header-bio">
         <div class="bio-line">
             <label class="bio-label">Nom, surnom</label>
