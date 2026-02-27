@@ -111,6 +111,9 @@ export class BrigandyneActorSheet extends HandlebarsApplicationMixin(ActorSheetV
     // Enrichissement du texte pour l'éditeur AppV2
       context.enrichedBiography = await TextEditor.enrichHTML(this.actor.system.biography || "", { async: true });
 
+      // Savoir si la fiche est verrouillée (par défaut: non)
+    context.isLocked = this.actor.getFlag("brigandyne2appv2", "sheetLocked") || false;
+
     return context;
   }
 
@@ -163,6 +166,38 @@ export class BrigandyneActorSheet extends HandlebarsApplicationMixin(ActorSheetV
             ChatMessage.create({ user: game.user._id, speaker: ChatMessage.getSpeaker({ actor: this.actor }), content: content, rolls: [roll] });
         }
     });
+    // ==========================================
+    // DRAG & DROP UNIVERSEL (V12 & V13)
+    // ==========================================
+    if (this.isEditable) {
+        // 1. On autorise le survol de la fiche
+        this.element.ondragover = (event) => {
+            event.preventDefault();
+        };
+        
+        // 2. On intercepte le "lâcher"
+        this.element.ondrop = (event) => {
+            event.preventDefault();
+            // 🛑 LE BOUCLIER ANTI-CLONES POUR LA V13 EST ICI :
+            event.stopPropagation(); 
+            
+            // On appelle ta fonction personnalisée !
+            this._onDrop(event);
+        };
+    }
+    // D. Clic sur le cadenas (Verrouillage)
+    html.find('[data-action="toggleLock"]').click(async ev => {
+        ev.preventDefault();
+        const currentLock = this.actor.getFlag("brigandyne2appv2", "sheetLocked") || false;
+        await this.actor.setFlag("brigandyne2appv2", "sheetLocked", !currentLock);
+    });
+
+    // On applique la classe CSS "locked" sur toute la fiche si elle est verrouillée
+    if (context.isLocked) {
+        html.addClass("locked");
+    } else {
+        html.removeClass("locked");
+    }
 
     html.find('[data-action="rollStat"]').click(this._onRoll.bind(this));
     html.find('[data-action="rollWeapon"]').click(this._onItemRoll.bind(this));
@@ -201,6 +236,13 @@ export class BrigandyneActorSheet extends HandlebarsApplicationMixin(ActorSheetV
   }
 
 async _onDrop(event) {
+    
+    // 0. Sécurité : empêcher le drop si la fiche est verrouillée
+    if (this.actor.getFlag("brigandyne2appv2", "sheetLocked")) {
+        ui.notifications.warn("🔒 La fiche est verrouillée ! Déverrouillez-la pour ajouter un objet.");
+        return false;
+    }
+
     // 1. Récupération des données du lâcher
     const data = TextEditor.getDragEventData(event);
     
