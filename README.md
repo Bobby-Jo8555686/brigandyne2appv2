@@ -5,19 +5,19 @@ Voici votre guide de survie.
 ________________________________________
 ## **1. Configuration et Options (Settings)**
 Avant de lancer votre première bagarre dans une taverne, allez faire un tour dans les paramètres du système (Configuration des options > System Settings). J'y ai intégré deux options particulièrement utiles :
-> Sbires vaincus en un coup (Monde) : Une règle optionnelle "cinématique". Si vous l'activez, le moindre point de dégât infligé à un PNJ de type "Sbire" fera tomber sa Vitalité à 0. Parfait pour les scènes épiques où les héros fendent la foule !
->	Actions rapides sur les Tokens / HUD (Client) : Activée par défaut, cette option ajoute un menu rapide directement sur le Token (voir section 4). Chaque joueur peut l'activer ou la désactiver selon ses préférences d'interface.
+- Sbires vaincus en un coup (Monde) : Une règle optionnelle "cinématique". Si vous l'activez, le moindre point de dégât infligé à un PNJ de type "Sbire" fera tomber sa Vitalité à 0. Parfait pour les scènes épiques où les héros fendent la foule !
+- Actions rapides sur les Tokens / HUD (Client) : Activée par défaut, cette option ajoute un menu rapide directement sur le Token (voir section 4). Chaque joueur peut l'activer ou la désactiver selon ses préférences d'interface.
 ________________________________________
 ## **2. Les Fiches de Personnages (Actors)**
 Le système gère deux grands types d'Acteurs : les Personnages (PJ) et les PNJ.
 ### **Le Verrouillage de la Fiche (Le Cadenas)**
 Vous remarquerez un petit cadenas en haut des fiches. L'AppV2 est très réactive, et un coup de molette accidentel est vite arrivé.
->	Cadenas ouvert (Vert) : Mode édition. Vous pouvez modifier les caractéristiques de base, glisser-déposer des objets/sorts, ou les supprimer.
->	Cadenas fermé (Rouge) : Mode jeu. La fiche est verrouillée ! Impossible de supprimer une arme par erreur ou de modifier la Force. Cependant, les joueurs peuvent toujours modifier leurs jauges dynamiques (Vitalité, Sang-Froid, Destin) et utiliser leurs objets. C'est le mode recommandé en pleine partie.
+- Cadenas ouvert (Vert) : Mode édition. Vous pouvez modifier les caractéristiques de base, glisser-déposer des objets/sorts, ou les supprimer.
+- Cadenas fermé (Rouge) : Mode jeu. La fiche est verrouillée ! Impossible de supprimer une arme par erreur ou de modifier la Force. Cependant, les joueurs peuvent toujours modifier leurs jauges dynamiques (Vitalité, Sang-Froid, Destin) et utiliser leurs objets. C'est le mode recommandé en pleine partie.
 ### **La Gestion Intelligente des PNJ**
 Pour vous faire gagner du temps, les statistiques des PNJ (Vitalité et Sang-Froid) se calculent automatiquement selon les règles officielles en fonction du "Type de PNJ" que vous sélectionnez dans le menu déroulant :
->	Boss / Intermédiaire / Créature : Bénéficient de la formule complète et sont aussi robustes que les PJ.
->	Sbire : Considérés comme des "PNJ mineurs", leur formule de Vitalité est bridée (pas de bonus de Volonté, Endurance divisée par 10) et leur Sang-Froid réduit de moitié pour refléter leur lâcheté.
+- Boss / Intermédiaire / Créature : Bénéficient de la formule complète et sont aussi robustes que les PJ.
+- Sbire : Considérés comme des "PNJ mineurs", leur formule de Vitalité est bridée (pas de bonus de Volonté, Endurance divisée par 10) et leur Sang-Froid réduit de moitié pour refléter leur lâcheté.
 ________________________________________
 ##**3. L'Inventaire et le Drag & Drop**
 Le système utilise un glisser-déposer (Drag & Drop) universel conçu spécifiquement pour ne pas créer de "clones" d'objets (un problème courant sur les nouvelles versions de Foundry).
