@@ -36,12 +36,12 @@ Comment attaquer ?
 Vous avez 8 gobelins et 2 ogres sur la carte et vous ne voulez pas ouvrir 10 fiches de personnages ? J'ai pensé à vous.
 - Faites un **Clic Droit** sur n'importe quel Token. Une colonne translucide apparaît sur la droite du menu circulaire natif de Foundry. Elle liste instantanément **toutes les armes et tous les sorts** de ce personnage. Un clic sur une arme dans ce menu déclenche l'attaque avec la même automatisation que depuis la fiche.
 ________________________________________
-##**5. La Magie (Le Grimoire)**
+## **5. La Magie (Le Grimoire)**
 La magie de Brigandyne est puissante mais dangereuse. Sur l'onglet "Magie" de la fiche, vous retrouverez les sorts divisés en Tours, Sortilèges et Rituels.
->	Lancer un Sort : Comme pour les armes, cliquez sur le dé du sort. Une boîte de dialogue s'ouvre pour vous demander la difficulté (préremplie si bien configurée dans le sort) et si vous récitez la formule ou dépensez des PV/SF pour vous aider.
->	Utilisations quotidiennes : Chaque sort possède une case à cocher pour tracker son utilisation. Rappelez aux joueurs que dépasser la limite leur coûtera des Points de Vitalité !
+- Lancer un Sort : Comme pour les armes, cliquez sur le dé du sort. Une boîte de dialogue s'ouvre pour vous demander la difficulté (préremplie si bien configurée dans le sort) et si vous récitez la formule ou dépensez des PV/SF pour vous aider.
+- Utilisations quotidiennes : Chaque sort possède une case à cocher pour tracker son utilisation. Rappelez aux joueurs que dépasser la limite leur coûtera des Points de Vitalité !
 ________________________________________
-##**Le mot de la fin**
+## **Le mot de la fin**
 Ce système a été pensé pour s'effacer au profit de l'histoire. Laissez l'automatisation gérer les soustractions d'armure et les calculs de RU, gardez vos fiches verrouillées en jeu, abusez du Token HUD pour vos monstres, et profitez de l'ambiance impitoyable de Thalios.
 Si vous trouvez un bug ou si votre hallebarde refuse de trancher un gobelin, n'hésitez pas à faire des retours. Bon jeu, et que le Destin veille sur vos PJ... ils en auront besoin !
 
