@@ -19,22 +19,22 @@ Pour vous faire gagner du temps, les statistiques des PNJ (Vitalité et Sang-Fro
 - Boss / Intermédiaire / Créature : Bénéficient de la formule complète et sont aussi robustes que les PJ.
 - Sbire : Considérés comme des "PNJ mineurs", leur formule de Vitalité est bridée (pas de bonus de Volonté, Endurance divisée par 10) et leur Sang-Froid réduit de moitié pour refléter leur lâcheté.
 ________________________________________
-##**3. L'Inventaire et le Drag & Drop**
+## **3. L'Inventaire et le Drag & Drop**
 Le système utilise un glisser-déposer (Drag & Drop) universel conçu spécifiquement pour ne pas créer de "clones" d'objets (un problème courant sur les nouvelles versions de Foundry).
->	Carrières, Armes, Domaines et Sorts : Glissez-les directement depuis vos compendiums vers la fiche du personnage (cadenas ouvert !).
->	Domaines Magiques : Vous pouvez ouvrir la fiche d'un "Domaine" pour y voir tous les sorts associés grâce à des liens dynamiques, et glisser ces sorts directement depuis le Domaine vers l'onglet Magie du PJ.
+- Carrières, Armes, Domaines et Sorts : Glissez-les directement depuis vos compendiums vers la fiche du personnage (cadenas ouvert !).
+- Domaines Magiques : Vous pouvez ouvrir la fiche d'un "Domaine" pour y voir tous les sorts associés grâce à des liens dynamiques, et glisser ces sorts directement depuis le Domaine vers l'onglet Magie du PJ.
 ________________________________________
-##**4. Le Cœur du Système : Combats et Jets de Dés**
+## **4. Le Cœur du Système : Combats et Jets de Dés**
 Brigandyne est un jeu mortel où tout se résout avec un D100. J'ai entièrement automatisé la mécanique pour vous éviter les calculs d'apothicaire à 2h du matin.
 Comment attaquer ?
->	Ciblez un ennemi (avec la touche 'T' ou le double clic droit habituel de Foundry).
->	Ouvrez votre fiche et cliquez sur l'icône de dé à côté de votre arme.
->	Une fenêtre de dialogue s'ouvre : vous pouvez y choisir votre posture martiale (Tactique : Efficace, En force, En finesse...), indiquer des avantages/désavantages, utiliser du Sang-Froid ou choisir de "Viser".
->	Cliquez sur "Frapper".
+- Ciblez un ennemi (avec la touche 'T' ou le double clic droit habituel de Foundry).
+- Ouvrez votre fiche et cliquez sur l'icône de dé à côté de votre arme.
+- Une fenêtre de dialogue s'ouvre : vous pouvez y choisir votre posture martiale (Tactique : Efficace, En force, En finesse...), indiquer des avantages/désavantages, utiliser du Sang-Froid ou choisir de "Viser".
+- Cliquez sur "Frapper".
 **La magie de l'automatisation fait le reste** : Le système jette le dé, calcule le Résultat des Unités (RU), ajoute les dégâts de l'arme et la Force, soustrait automatiquement la protection de l'armure de la cible ciblée, et lui retire ses Points de Vitalité ! S'il y a un coup critique (RU = 0), le système gère même l'explosion du dé.
-###**Le "Token HUD" (L'arme secrète du MJ)**
+### **Le "Token HUD" (L'arme secrète du MJ)**
 Vous avez 8 gobelins et 2 ogres sur la carte et vous ne voulez pas ouvrir 10 fiches de personnages ? J'ai pensé à vous.
-Faites un **Clic Droit** sur n'importe quel Token. Une colonne translucide apparaît sur la droite du menu circulaire natif de Foundry. Elle liste instantanément **toutes les armes et tous les sorts** de ce personnage. Un clic sur une arme dans ce menu déclenche l'attaque avec la même automatisation que depuis la fiche.
+- Faites un **Clic Droit** sur n'importe quel Token. Une colonne translucide apparaît sur la droite du menu circulaire natif de Foundry. Elle liste instantanément **toutes les armes et tous les sorts** de ce personnage. Un clic sur une arme dans ce menu déclenche l'attaque avec la même automatisation que depuis la fiche.
 ________________________________________
 ##**5. La Magie (Le Grimoire)**
 La magie de Brigandyne est puissante mais dangereuse. Sur l'onglet "Magie" de la fiche, vous retrouverez les sorts divisés en Tours, Sortilèges et Rituels.
