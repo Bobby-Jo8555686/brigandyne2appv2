@@ -12,6 +12,7 @@
       "flags": {}
     }
   ],
+  "background": "systems/brigandyne2appv2/assets/ui/brigandyne-bg.webp",
   "esmodules": [
     "scripts/brigandyne.js"
   ],
@@ -43,5 +44,6 @@
   "readme": ""
 
 }
+
 
 
