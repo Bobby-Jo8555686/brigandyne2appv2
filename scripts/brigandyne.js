@@ -25,6 +25,14 @@ Hooks.once("init", async function() {
         type: Boolean,
         default: true        // Activé par défaut, comme tu le souhaites
     });
+    game.settings.register("brigandyne2appv2", "strictMagicDomains", {
+        name: "Restriction des Domaines Magiques",
+        hint: "Si activé, un PJ ne peut recevoir (glisser-déposer) que les sorts listés dans les Domaines Magiques qu'il possède déjà dans son inventaire.",
+        scope: "world",
+        config: true,
+        type: Boolean,
+        default: true
+    });
 
     // ==========================================
     // 1. CLASSES ET DONNÉES (DATAMODELS)
@@ -104,72 +112,87 @@ Hooks.once("init", async function() {
         "systems/brigandyne2appv2/templates/actor/parts/biography.hbs"
     ]);
     // ==========================================
-    // TOKEN HUD : ACTIONS RAPIDES (Armes & Sorts)
+    // TOKEN HUD : ACTIONS RAPIDES (Universel V12/V13)
     // ==========================================
     Hooks.on("renderTokenHUD", (hud, html, tokenData) => {
+        // 1. Vérification de l'option
         if (!game.settings.get("brigandyne2appv2", "enableTokenHUD")) return;
+
         const actor = hud.object?.actor;
         if (!actor) return;
 
-        // Récupérer les armes et les sorts du personnage
+        // 2. Récupération des objets
         const armes = actor.items.filter(i => i.type === "arme");
         const sorts = actor.items.filter(i => i.type === "sort");
 
-        // S'il n'a ni arme ni sort, on ne fait rien
         if (armes.length === 0 && sorts.length === 0) return;
 
-        // Création d'une nouvelle colonne à droite du HUD
-        let actionCol = $(`<div class="col right brigandyne-hud-col" style="right: -190px; width: 180px; top: 0; position: absolute; display: flex; flex-direction: column; gap: 4px; z-index: 100;"></div>`);
+        // 3. Bouclier de compatibilité V12/V13 (jQuery vs DOM Natif)
+        const htmlElement = html.length ? html[0] : html;
+
+        // 4. Création du container en DOM Natif
+        const actionCol = document.createElement("div");
+        actionCol.className = "col right brigandyne-hud-col";
+        actionCol.style.cssText = "right: -190px; width: 180px; top: 0; position: absolute; display: flex; flex-direction: column; gap: 4px; z-index: 100;";
+
+        let innerHTML = "";
 
         // --- SECTION ARMES ---
         if (armes.length > 0) {
-            actionCol.append(`<div style="color: white; font-weight: bold; border-bottom: 2px solid #8b0000; text-align: center; text-transform: uppercase; font-size: 0.8em; margin-bottom: 4px; text-shadow: 1px 1px 2px black;">⚔️ Armes</div>`);
+            innerHTML += `<div style="color: white; font-weight: bold; border-bottom: 2px solid #8b0000; text-align: center; text-transform: uppercase; font-size: 0.8em; margin-bottom: 4px; text-shadow: 1px 1px 2px black;">⚔️ Armes</div>`;
             
             armes.forEach(arme => {
-                actionCol.append(`
+                innerHTML += `
                     <div class="control-icon brigandyne-action" data-type="weapon" data-id="${arme.id}" title="${arme.name}" style="width: 100%; display: flex; align-items: center; justify-content: flex-start; padding: 2px 5px; border-radius: 5px; background: rgba(0,0,0,0.7); border: 1px solid #444; margin: 0; box-sizing: border-box; cursor: pointer; transition: background 0.2s;">
                         <img src="${arme.img}" style="width: 24px; height: 24px; border: none; margin-right: 8px; border-radius: 3px;">
                         <span style="color: white; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Georgia', serif;">${arme.name}</span>
                     </div>
-                `);
+                `;
             });
         }
 
         // --- SECTION MAGIE ---
         if (sorts.length > 0) {
-            actionCol.append(`<div style="color: white; font-weight: bold; border-bottom: 2px solid #4a6491; text-align: center; text-transform: uppercase; font-size: 0.8em; margin-top: 8px; margin-bottom: 4px; text-shadow: 1px 1px 2px black;">✨ Magie</div>`);
+            innerHTML += `<div style="color: white; font-weight: bold; border-bottom: 2px solid #4a6491; text-align: center; text-transform: uppercase; font-size: 0.8em; margin-top: 8px; margin-bottom: 4px; text-shadow: 1px 1px 2px black;">✨ Magie</div>`;
             
             sorts.forEach(sort => {
-                actionCol.append(`
+                innerHTML += `
                     <div class="control-icon brigandyne-action" data-type="spell" data-id="${sort.id}" title="${sort.name}" style="width: 100%; display: flex; align-items: center; justify-content: flex-start; padding: 2px 5px; border-radius: 5px; background: rgba(0,0,0,0.7); border: 1px solid #444; margin: 0; box-sizing: border-box; cursor: pointer; transition: background 0.2s;">
                         <img src="${sort.img}" style="width: 24px; height: 24px; border: none; margin-right: 8px; border-radius: 3px;">
                         <span style="color: white; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Georgia', serif;">${sort.name}</span>
                     </div>
-                `);
+                `;
             });
         }
 
-        // Action au clic sur un bouton
-        actionCol.find('.brigandyne-action').click(async (ev) => {
-            ev.preventDefault();
-            const type = ev.currentTarget.dataset.type;
-            const itemId = ev.currentTarget.dataset.id;
+        actionCol.innerHTML = innerHTML;
+
+        // 5. Ajout des événements de clic et de survol en JavaScript Pur
+        const actionButtons = actionCol.querySelectorAll('.brigandyne-action');
+        actionButtons.forEach(btn => {
             
-            // Déclenche la fonction native de ton actor.js !
-            if (type === "weapon") await actor.rollWeapon(itemId);
-            if (type === "spell") await actor.rollSpell(itemId);
-            
-            // Optionnel : ferme le HUD après avoir cliqué pour nettoyer l'écran
-            hud.clear(); 
+            // Clic sur l'action
+            btn.addEventListener('click', async (ev) => {
+                ev.preventDefault();
+                const type = ev.currentTarget.dataset.type;
+                const itemId = ev.currentTarget.dataset.id;
+                
+                if (type === "weapon") await actor.rollWeapon(itemId);
+                if (type === "spell") await actor.rollSpell(itemId);
+                
+                hud.clear(); // Ferme le HUD
+            });
+
+            // Effet de survol (Hover)
+            btn.addEventListener('mouseenter', () => {
+                btn.style.background = "rgba(139, 0, 0, 0.8)";
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.background = "rgba(0, 0, 0, 0.7)";
+            });
         });
 
-        // Petit effet au survol de la souris
-        actionCol.find('.brigandyne-action').hover(
-            function() { $(this).css("background", "rgba(139, 0, 0, 0.8)"); },
-            function() { $(this).css("background", "rgba(0, 0, 0, 0.7)"); }
-        );
-
-        // Injection dans le HTML du HUD
-        html.append(actionCol);
+        // 6. Injection dans l'élément natif du HUD (compatible V13)
+        htmlElement.appendChild(actionCol);
     });
 });
