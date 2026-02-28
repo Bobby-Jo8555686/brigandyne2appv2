@@ -1,4 +1,4 @@
-#**Bienvenue, Maîtres de Jeu et rôlistes de l'ombre !**
+# **Bienvenue, Maîtres de Jeu et rôlistes de l'ombre !**
 Si vous lisez ces lignes, c'est que vous avez décidé de plonger vos joueurs dans la Renaissance sombre et sanglante de Thalios avec le système Brigandyne (2e Édition) pour Foundry VTT.
 J'ai conçu ce système (brigandyne2appv2) pour qu'il soit à la fois respectueux de la brutalité du jeu de rôle original et à la pointe de la technologie Foundry (il utilise la toute nouvelle architecture AppV2 pour une fluidité et une robustesse maximales). Puisque vous connaissez déjà Foundry, je ne vais pas vous expliquer comment créer un dossier, mais plutôt vous guider à travers les outils spécifiques que j'ai forgés pour vous faciliter la vie.
 Voici votre guide de survie.
