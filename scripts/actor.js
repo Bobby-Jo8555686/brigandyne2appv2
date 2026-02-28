@@ -248,227 +248,235 @@ export class BrigandyneActor extends Actor {
     // ============================================
     // 3. JETS DE MAGIE ULTIMES
     // ============================================
-    async rollSpell(itemId) {
+async rollSpell(itemId) {
         const sort = this.items.get(itemId);
         if (!sort) return;
 
-        const typeSort = sort.system.type_sort || "sortilege";
-        const formule = sort.system.formule || "";
+        const statIncantationKey = this.system.stat_magie_defaut || "mag";
+        const scoreIncantation = this.system.stats[statIncantationKey]?.total || 0;
+
+        // 1. Calcul des Utilisations Quotidiennes
+        const uses = this.getFlag("brigandyne2appv2", "magicUses") || { tour: 0, sortilege: 0, rituel: 0 };
+        const typeSort = sort.system.type_sort || "sortilege"; 
+        const isTour = typeSort === "tour";
         
-        const resistanceStr = sort.system.resistance ? sort.system.resistance.toLowerCase().trim() : "";
-        let resistanceKey = "vol"; // Par défaut, la Volonté
-        for (let k of Object.keys(this.system.stats)) {
-            if (resistanceStr.includes(k)) {
-                resistanceKey = k;
-                break;
-            }
+        const magTotal = this.system.stats.mag?.total || 0;
+        const magIndice = Math.floor(magTotal / 10);
+        let maxUses = typeSort === "rituel" ? 1 : magIndice;
+        let currentUses = uses[typeSort] || 0;
+        let limitExceeded = currentUses >= maxUses;
+        
+        // S'il dépasse la limite, le sort va puiser dans les PV
+        let extraCost = 0;
+        if (limitExceeded) {
+            if (isTour) extraCost = 2;
+            else if (typeSort === "sortilege") extraCost = 4;
+            else extraCost = 6;
         }
 
+        // =====================================
+        // GESTION DE LA CIBLE (TARGETING NATIF)
+        // =====================================
         let target = Array.from(game.user.targets)[0];
+        let targetHtml = "";
         let statOptions = "";
-        for (let [k, s] of Object.entries(this.system.stats)) {
-            let isSelected = (k === resistanceKey) ? 'selected' : '';
-            statOptions += `<option value="${k}" ${isSelected}>${s.label}</option>`;
-        }
-
-        const statKey = this.system.stat_magie_defaut || "cns";
-        const relevantAtouts = this.items.filter(i => i.type === "atout" && (i.system.stat_liee === statKey || i.system.stat_liee === ""));
         
-        let atoutsHtml = "";
-        if (relevantAtouts.length > 0) {
-            atoutsHtml = `<div style="margin-bottom: 10px; background: rgba(212, 175, 55, 0.05); padding: 5px; border: 1px dashed #d4af37; border-radius: 3px;"><div style="font-weight: bold; color: #8b6d05; font-size: 0.85em; margin-bottom: 4px; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 2px;">Spécialités & Talents magiques :</div><div style="display: flex; flex-direction: column; gap: 2px;">`;
-            for (let a of relevantAtouts) {
-                const bonus = Number(a.system.bonus) || 0;
-                if (bonus > 0) {
-                    atoutsHtml += `<label style="display: flex; align-items: baseline; gap: 4px; cursor: pointer; font-size: 0.8em; margin: 0; color: #111;"><input type="checkbox" class="atout-bonus" value="${bonus}" style="margin: 0; width: 12px; height: 12px; transform: translateY(2px);"/><span><strong>${a.name} (+${bonus})</strong></span></label>`;
-                } else {
-                    atoutsHtml += `<div style="padding-left: 16px; font-size: 0.8em; color: #333; margin: 0;"><strong>${a.name}</strong></div>`;
-                }
+        if (target) {
+            for (let [k, s] of Object.entries(this.system.stats)) {
+                // Par défaut, on présélectionne la Volonté pour la résistance magique
+                let selected = (k === 'vol') ? 'selected' : '';
+                statOptions += `<option value="${k}" ${selected}>${s.label}</option>`;
             }
-            atoutsHtml += `</div></div>`;
+            targetHtml = `
+                <div class="form-group" style="margin-bottom: 10px; padding: 10px; background: rgba(139, 0, 0, 0.1); border: 1px dashed #8b0000; border-radius: 5px;">
+                    <label style="font-weight: bold; color: #8b0000;">Cible : ${target.name}</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                        <span style="font-size: 0.9em; color: #333;">Caractéristique de Résistance :</span>
+                        <select id="targetResistStat" style="width: 50%;">
+                            ${statOptions}
+                        </select>
+                    </div>
+                </div>
+            `;
+        } else if (isTour) {
+            targetHtml = `
+                <div style="margin-bottom: 10px; padding: 10px; background: rgba(76, 175, 80, 0.1); border: 1px dashed #4CAF50; border-radius: 5px; text-align: center; color: #2E7D32; font-weight: bold;">
+                    Aucune cible sélectionnée.<br>Ce Tour réussira automatiquement (sans jet).
+                </div>
+            `;
         }
 
-        let formuleHtml = "";
-        if (formule && typeSort !== "tour") {
-            formuleHtml = `<div style="margin-bottom: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-left: 3px solid #8b0000; font-family: 'Georgia', serif; font-style: italic; color: #111;">"${formule.replace(/\n/g, '<br>')}"</div>`;
-        }
-
+        // 2. Création de la boîte de dialogue
         let dialogContent = `
-        <form>
-            <div class="form-group" style="margin-bottom: 10px;">
-                <label style="font-weight: bold; color: #111;">Type d'incantation :</label>
-                <select id="spellType" style="width: 100%;">
-                    <option value="sortilege" ${typeSort === 'sortilege' ? 'selected' : ''}>Sortilège (Normal)</option>
-                    <option value="tour_auto" ${typeSort === 'tour' ? 'selected' : ''}>Tour de Magie (Automatique)</option>
-                    <option value="tour_jet">Tour de Magie (Jet requis par le MJ)</option>
-                    <option value="rituel" ${typeSort === 'rituel' ? 'selected' : ''}>Rituel (Action longue)</option>
-                </select>
+            <div style="margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 5px; border-left: 3px solid #673ab7;">
+                <p><b>Utilisations d'aujourd'hui :</b> ${currentUses} / ${maxUses} (${typeSort}s)</p>
+                ${limitExceeded ? `<p style="color: darkred; font-weight: bold;">⚠️ Limite dépassée ! Ce sort va arracher ${extraCost} PV de votre énergie vitale.</p>` : `<p style="color: green;">Dans la limite autorisée.</p>`}
             </div>
-            ${target ? `
-            <div class="form-group" style="margin-bottom: 10px; background: rgba(74, 100, 145, 0.1); padding: 5px; border: 1px dashed #4a6491; border-radius: 3px;">
-                <label style="font-weight: bold; color: #4a6491;">Cible : ${target.name}</label>
-                <select id="targetStat" style="width: 100%; margin-top: 5px;">${statOptions}</select>
-                <p style="font-size: 0.8em; color: #555; margin-top: 4px;">Compétence utilisée par la cible pour résister.</p>
-            </div>` : ''}
-            ${atoutsHtml}
-            ${formuleHtml}
+            
+            ${targetHtml}
+
             <div class="form-group" style="margin-bottom: 10px;">
-                <label style="font-weight: bold; color: #111;">Avantages / Désav. circonstanciels :</label>
+                <label style="font-weight: bold;">Difficulté du sort :</label>
+                <input type="number" id="spellDiff" value="${Number(sort.system.difficulte) || 0}" style="width: 100%; text-align: center;">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label style="font-weight: bold;">Avantages / Désav. circonstanciels :</label>
                 <input type="number" id="advC" value="0" style="width: 100%; text-align: center;">
             </div>
-            <hr style="margin: 10px 0;">
-            ${formule ? `
+
+            <hr>
+            <h4 style="text-align: center; color: #8b0000; margin-bottom: 5px; font-family: 'Georgia', serif;">🩸 Magie du Sang 🩸</h4>
+            
             <div class="form-group" style="margin-bottom: 5px; display: flex; justify-content: space-between;">
-                <label style="color: #111;"><i class="fas fa-comment-dots"></i> Formule prononcée (+5%)</label>
-                <input type="checkbox" id="formule" />
-            </div>` : ''}
-            <div class="form-group" style="margin-bottom: 5px; display: flex; justify-content: space-between;">
-                <label style="color: #111;"><i class="fas fa-brain"></i> Dépenser 2 Sang-froid (+10%)</label>
-                <input type="checkbox" id="sangfroid" />
+                <label>Sacrifier des PV (+1% par PV) :</label>
+                <input type="number" id="sacrificedPV" value="0" min="0" style="width: 50px; text-align: center;">
             </div>
-            <div class="form-group" style="margin-bottom: 5px; display: flex; justify-content: space-between;">
-                <label style="color: #111;"><i class="fas fa-exclamation-triangle" style="color:#8b0000;"></i> Dépassement de limite</label>
-                <input type="checkbox" id="limite" title="Coûte 2 PV (Tour), 4 PV (Sort) ou 6 PV (Rituel)"/>
+            
+            <div class="form-group" style="margin-bottom: 10px; display: flex; justify-content: space-between;">
+                <label>Sang d'être magique (Bonus x2) :</label>
+                <input type="checkbox" id="sangMagique">
             </div>
-            <div class="form-group" style="margin-top: 10px;">
-                <label style="font-weight: bold; color: #8b0000;"><i class="fas fa-tint"></i> Sacrifice de Vitalité (Sang) :</label>
-                <input type="number" id="sacrifice" value="0" min="0" style="width: 100%; text-align: center;">
-            </div>
-        </form>`;
+        `;
 
         new Dialog({
-            title: `Lancement : ${sort.name}`,
+            title: `Grimoire : ${sort.name}`,
             content: dialogContent,
             buttons: {
-                lancer: {
+                roll: {
                     icon: '<i class="fas fa-magic"></i>',
-                    label: "Incantater",
+                    label: "Incanter",
                     callback: async (html) => {
-                        let totalBonusAtouts = 0;
-                        html.find('.atout-bonus:checked').each(function() { totalBonusAtouts += Number($(this).val()); });
-
                         const options = {
-                            spellType: html.find('#spellType').val(),
-                            targetStatKey: target ? html.find('#targetStat').val() : null,
+                            spellDiff: parseInt(html.find('#spellDiff').val()) || 0,
                             advC: parseInt(html.find('#advC').val()) || 0,
-                            bonusAtouts: totalBonusAtouts, 
-                            formule: html.find('#formule').is(':checked'),
-                            useSF: html.find('#sangfroid').is(':checked'),
-                            exceedLimit: html.find('#limite').is(':checked'),
-                            sacrifice: parseInt(html.find('#sacrifice').val()) || 0,
-                            targetActor: target ? target.actor : null
+                            sacrificedPV: Math.max(0, parseInt(html.find('#sacrificedPV').val()) || 0),
+                            sangMagique: html.find('#sangMagique').is(':checked'),
+                            extraCost: extraCost,
+                            typeSort: typeSort,
+                            scoreIncantation: scoreIncantation,
+                            isTour: isTour,
+                            targetId: target ? target.id : null,
+                            targetResistStat: target ? html.find('#targetResistStat').val() : null
                         };
                         await this._executeSpellRoll(sort, options);
                     }
-                }
+                },
+                cancel: { icon: '<i class="fas fa-times"></i>', label: "Annuler" }
             },
-            default: "lancer"
+            default: "roll"
         }).render(true);
     }
 
     async _executeSpellRoll(sort, options) {
-        const statKey = this.system.stat_magie_defaut || "cns";
-        let scoreBase = this.system.stats[statKey].total || this.system.stats[statKey].value;
-        const handicaps = this.system.handicaps || {};
-        let handicapLabels = []; let desavantages = 0;
+        // 1. Déduction des Points de Vie (Sacrifice + Dépassement de limite)
+        let totalPVLoss = options.sacrificedPV + options.extraCost;
+        if (totalPVLoss > 0) {
+            let newPV = Math.max(0, this.system.vitalite.value - totalPVLoss);
+            await this.update({"system.vitalite.value": newPV});
+        }
 
-        if (handicaps.aveugle && (statKey === "tir" || statKey === "per")) { scoreBase = 0; handicapLabels.push("Aveuglé"); }
-        if (handicaps.affaibli) { desavantages += 1; handicapLabels.push("Affaibli (-10)"); }
-        if (handicaps.aveugle && statKey === "com") { desavantages += 2; handicapLabels.push("Aveuglé (-20)"); }
+        // 2. On incrémente le Flag d'utilisations quotidiennes
+        let uses = this.getFlag("brigandyne2appv2", "magicUses") || { tour: 0, sortilege: 0, rituel: 0 };
+        uses[options.typeSort] = (uses[options.typeSort] || 0) + 1;
+        await this.setFlag("brigandyne2appv2", "magicUses", uses);
+
+        // =====================================
+        // CAS SPÉCIAL : TOUR SANS CIBLE
+        // =====================================
+        if (options.isTour && !options.targetId) {
+            let messageAuto = `
+                <div style="background: rgba(103, 58, 183, 0.1); padding: 10px; border: 2px solid #673ab7; border-radius: 5px;">
+                    <h3 style="color: #673ab7; text-align: center; border-bottom: 1px solid #673ab7; font-family: 'Georgia', serif;">✨ ${sort.name}</h3>
+                    <div style="text-align: center; font-size: 1.2em; font-weight: bold; margin: 10px 0; color: #4CAF50;">
+                        ✅ Succès Automatique (Tour)
+                    </div>
+            `;
+            if (totalPVLoss > 0) {
+                messageAuto += `<p style="color: darkred; font-size: 0.9em; text-align: center;">🩸 Le mage a sacrifié ou puisé <b>${totalPVLoss} PV</b> de son corps pour alimenter ce tour !</p>`;
+            }
+            messageAuto += `<hr><p style="font-size: 0.9em;">${sort.system.description}</p></div>`;
+            
+            return ChatMessage.create({
+                speaker: ChatMessage.getSpeaker({ actor: this }),
+                content: messageAuto
+            });
+        }
+
+        // =====================================
+        // CAS NORMAL : JET DE DÉS (Sort, Rituel ou Tour AVEC Cible)
+        // =====================================
+        let baseScore = options.scoreIncantation;
+        let sacrificeBonus = options.sacrificedPV * (options.sangMagique ? 2 : 1);
         
-        let bloqueRPlus = handicaps.affame || handicaps.demoralise;
-        if (handicaps.affame) handicapLabels.push("Affamé");
-        if (handicaps.demoralise) handicapLabels.push("Démoralisé");
-
-        let score = scoreBase;
-        const difficulteSort = Number(sort.system.difficulte) || 0;
-        let pertePV = 0; let perteSF = 0;
-
-        if (options.useSF) perteSF += 2;
-        if (options.sacrifice > 0) pertePV += options.sacrifice;
-        if (options.exceedLimit) {
-            if (options.spellType.includes("tour")) pertePV += 2;
-            else if (options.spellType === "sortilege") pertePV += 4;
-            else if (options.spellType === "rituel") pertePV += 6;
-        }
-
-        if (options.spellType === "tour_auto") {
-            this._applyMagicCosts(pertePV, perteSF);
-            ChatMessage.create({ user: game.user._id, speaker: ChatMessage.getSpeaker({ actor: this }), content: `<div class="brigandyne2-roll"><h3 style="border-bottom: 1px solid #222; margin-bottom: 5px;">${sort.name} (Tour)</h3><div style="text-align: center; font-size: 1.2em; font-weight: bold; color: #1a5b1a; margin: 10px 0;">✨ Succès Automatique</div>${pertePV > 0 || perteSF > 0 ? `<div style="font-size: 0.85em; color: #8b0000; text-align: center;">Coût payé : ${pertePV>0 ? '-'+pertePV+' PV ' : ''} ${perteSF>0 ? '-'+perteSF+' SF' : ''}</div>` : ''}</div>` });
-            return;
-        }
-
-        let bonusFixes = 0;
-        if (options.formule) bonusFixes += 5;
-        if (options.useSF) bonusFixes += 10;
-        if (options.sacrifice > 0) bonusFixes += options.sacrifice;
-
-        let netAdv = Math.max(-3, Math.min(3, options.advC - desavantages)); 
-        let bonusAvantage = netAdv * 10; 
-        score += bonusFixes + (options.bonusAtouts || 0) + bonusAvantage;
-
-        let diffFinale = difficulteSort;
-        let detailResistance = `Difficulté du sort : ${difficulteSort}`;
-        if (options.targetActor && options.targetStatKey) {
-            const targetStatScore = options.targetActor.system.stats[options.targetStatKey].total || options.targetActor.system.stats[options.targetStatKey].value;
-            const targetModo = 50 - targetStatScore;
-            diffFinale = Math.min(difficulteSort, targetModo);
-            detailResistance = `Résistance (${options.targetActor.name}) : MODO ${targetModo > 0 ? '+'+targetModo : targetModo}<br>Diff. du sort : ${difficulteSort > 0 ? '+'+difficulteSort : difficulteSort}<br><em>Malus retenu : ${diffFinale > 0 ? '+'+diffFinale : diffFinale}</em>`;
-        }
-        score += diffFinale;
-
-        const portee = sort.system.portee || "-";
-        const duree = sort.system.duree || "-";
-
-        let recapHtml = `<div style="font-size: 0.9em; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 3px; margin-bottom: 8px; text-align: left;">
-            <div style="text-align: center; margin-bottom: 5px; color: #555; font-size: 0.9em;"><strong>Portée :</strong> ${portee} | <strong>Durée :</strong> ${duree}</div>
-            <div><strong>Base (${this.system.stats[statKey].label}) :</strong> ${scoreBase}</div>
-            ${options.bonusAtouts > 0 ? `<div style="color: #8b6d05;"><strong>Bonus Spécialités :</strong> +${options.bonusAtouts}</div>` : ''}
-            ${bonusFixes !== 0 ? `<div><strong>Bonus divers :</strong> +${bonusFixes} <small>(${options.formule?'Formule ':''}${options.useSF?'Sang-Froid ':''}${options.sacrifice>0?'Sacrifice':''})</small></div>` : ''}
-            ${netAdv !== 0 ? `<div><strong>Avantages (${netAdv}) :</strong> ${bonusAvantage > 0 ? '+'+bonusAvantage : bonusAvantage}</div>` : ''}
-            <div style="margin-top: 5px; padding-top: 5px; border-top: 1px dashed #ccc;">${detailResistance}</div>
-            ${handicapLabels.length > 0 ? `<div style="color: #ff5252; margin-top: 3px; padding-top: 3px; border-top: 1px dashed #ff5252;"><strong>Handicaps :</strong> ${handicapLabels.join(", ")}</div>` : ''}
-            <div style="border-top: 1px solid #ccc; margin-top: 5px; padding-top: 3px; text-align: center; font-size: 1.1em;"><strong>Seuil final : ${score}</strong></div>
-            ${pertePV > 0 || perteSF > 0 ? `<div style="text-align: center; color: #8b0000; font-size: 0.85em; margin-top: 5px;">Coût vital : ${pertePV>0 ? '-'+pertePV+' PV ' : ''} ${perteSF>0 ? '-'+perteSF+' SF' : ''}</div>` : ''}
-        </div>`;
-
-        const roll = new Roll("1d100"); await roll.evaluate(); const result = roll.total;
-        let ru = result % 10; let isCrit = (ru === 0); if (isCrit) ru = 10;
-        let isSuccess = result <= score;
-        let message = ""; let cssClass = ""; let narratifHtml = "";
+        let modo = 0;
+        let targetLabel = "";
         
-        let rPlusText = sort.system.r_plus ? `<br><span style="color: #8b6d05; display:block; margin-top:4px;"><strong>R+ :</strong> ${sort.system.r_plus}</span>` : "";
+        // Si une cible est sélectionnée, on calcule son MODO de résistance
+        if (options.targetId) {
+            const targetToken = canvas.tokens.get(options.targetId);
+            if (targetToken && targetToken.actor) {
+                const targetStatScore = targetToken.actor.system.stats[options.targetResistStat]?.total || targetToken.actor.system.stats[options.targetResistStat]?.value || 0;
+                const targetStatName = targetToken.actor.system.stats[options.targetResistStat]?.label || options.targetResistStat;
+                modo = 50 - targetStatScore; // Formule du MODO de Brigandyne
+                targetLabel = `<br><span style="font-size: 0.85em; color: #ffcccc;">MODO de la cible (${targetStatName}) : ${modo > 0 ? '+'+modo : modo}</span>`;
+            }
+        }
+
+        let finalScore = baseScore + options.spellDiff + (options.advC * 10) + sacrificeBonus + 5 + modo; 
+
+        let roll = new Roll("1d100");
+        await roll.evaluate({async: true});
+        let result = roll.total;
+        let ru = result % 10;
+        
+        let isSuccess = result <= finalScore;
+        let isCrit = ru === 0 && isSuccess;
+        let isFumble = ru === 0 && !isSuccess;
+        let isMajSuccess = isSuccess && result <= 9;
+        let isMajFail = !isSuccess && result >= 91;
+
+        let message = `
+            <div style="background: rgba(103, 58, 183, 0.1); padding: 10px; border: 2px solid #673ab7; border-radius: 5px;">
+                <h3 style="color: #673ab7; text-align: center; border-bottom: 1px solid #673ab7; font-family: 'Georgia', serif;">✨ ${sort.name}</h3>
+                <p><b>Chances de succès :</b> ${finalScore}% ${targetLabel}</p>
+                <div style="text-align: center; font-size: 1.5em; font-weight: bold; margin: 10px 0;">
+                    Jet : ${result} ${isSuccess ? "✅" : "❌"}
+                </div>
+        `;
+
+        if (totalPVLoss > 0) {
+            message += `<p style="color: darkred; font-size: 0.9em;">🩸 Le mage a sacrifié ou puisé <b>${totalPVLoss} PV</b> de son corps pour alimenter ce sort !</p>`;
+        }
 
         if (isSuccess) {
-            if (bloqueRPlus) {
-                isCrit = false; message = "Réussite (R+ Bloqué !)"; cssClass = "success";
-                narratifHtml = `<div style="color: #8b0000; font-size: 0.9em; margin-top: 5px;"><strong>Handicap :</strong> Impossible d'obtenir un effet R+. Dégâts magiques réduits de 1.</div>`;
-            } else if (isCrit) {
-                message = "Réussite Critique !"; cssClass = "crit-success";
-                narratifHtml = `<div style="color: #1a5b1a; font-size: 0.9em; margin-top: 5px;"><strong>Action :</strong> Relancez le "0" OU appliquez l'effet spécial. ${rPlusText}</div>`;
-            } else if (result <= 9 && score >= 20) {
-                message = "Réussite Majeure !"; cssClass = "major-success";
-                narratifHtml = `<div style="color: #1a5b1a; font-size: 0.9em; margin-top: 5px;"><strong>Action :</strong> Appliquez l'effet spécial ! ${rPlusText}</div>`;
-            } else {
-                message = "Réussite Mineure"; cssClass = "success";
-                narratifHtml = `<div style="color: #4a6491; font-size: 0.85em; margin-top: 5px;"><em>Option : Prendre 1 complication mineure pour accéder à un R+ (1/jour).</em></div>`;
-            }
+            message += `<p><b>Résultat des Unités (RU) :</b> ${ru}</p>`;
+            if (isCrit) message += `<p style="color: #4CAF50; font-weight: bold;">🌟 RÉUSSITE CRITIQUE ! Le joueur choisit : RU explosif OU l'effet spécial.</p>`;
+            else if (isMajSuccess) message += `<p style="color: #4CAF50; font-weight: bold;">⭐ RÉUSSITE MAJEURE ! Effet Spécial : ${sort.system.r_plus || 'Aucun'}</p>`;
+            else message += `<p style="font-size: 0.9em; font-style: italic;">Réussite Mineure. Le mage peut "Forcer la Magie" (1x/jour) pour obtenir l'effet majeur, mais doit tirer une complication mineure.</p>`;
+            
+            message += `<hr><p style="font-size: 0.9em;">${sort.system.description}</p>`;
         } else {
-            if (isCrit) {
-                message = "Échec Critique !"; cssClass = "crit-fail";
-                narratifHtml = `<div style="color: #8b0000; font-size: 0.9em; margin-top: 5px;"><strong>Conséquence :</strong> Perte d'1 PV ou SF <strong>ET</strong> Complication Majeure !</div>`;
-            } else if (result >= 91 && score < 80) {
-                message = "Échec Majeur"; cssClass = "major-fail";
-                narratifHtml = `<div style="color: #8b0000; font-size: 0.85em; margin-top: 5px;">Complication Mineure.<br><em>Option : Forcer la magie pour réussir avec une Complication Majeure (1/jour).</em></div>`;
+            if (isFumble) {
+                message += `<p style="color: #b71c1c; font-weight: bold; text-align: center;">💥 ÉCHEC CRITIQUE 💥</p>
+                            <p style="color: #b71c1c;">La magie se déchaîne ! Le sort échoue, le mage perd 1 PV ou 1 SF, et le MJ doit tirer une <b>Complication Majeure</b> !</p>`;
+            } else if (isMajFail) {
+                message += `<p style="color: #b71c1c; font-weight: bold; text-align: center;">❌ ÉCHEC MAJEUR ❌</p>
+                            <p style="color: #b71c1c;">Erreur dramatique ! Le sort échoue et entraîne une <b>Complication Mineure</b>.</p>
+                            <p style="font-size: 0.9em; font-style: italic;">Le mage peut "Forcer la Magie" (1x/jour) pour forcer la réussite du sort, mais la complication devient MAJEURE.</p>`;
             } else {
-                message = "Échec Mineur"; cssClass = "fail";
-                narratifHtml = `<div style="color: #555; font-size: 0.85em; margin-top: 5px;"><em>Option : Forcer la magie pour réussir avec une Complication Mineure (1/jour).</em></div>`;
+                message += `<p style="color: #e65100; font-weight: bold; text-align: center;">Échec Mineur</p>
+                            <p>L'incantation s'étouffe. Rien ne se passe.</p>
+                            <p style="font-size: 0.9em; font-style: italic;">Le mage peut "Forcer la Magie" (1x/jour) pour forcer la réussite du sort, mais doit tirer une <b>Complication Mineure</b>.</p>`;
             }
         }
 
-        const content = `<div class="brigandyne2-roll"><h3 style="border-bottom: 1px solid #222; margin-bottom: 5px;">Lancement : ${sort.name}</h3>${recapHtml}<div class="dice-result"><div class="dice-total ${cssClass}">${result} <span style="font-size: 0.5em; color: #555;">(RU: ${ru})</span></div></div><div class="roll-result ${cssClass}" style="text-align: center; font-weight: bold; margin-bottom: 5px;">${message}</div><div style="background: rgba(255,255,255,0.7); padding: 5px; border-radius: 3px; border: 1px dotted #ccc; text-align: center;">${narratifHtml}</div></div>`;
-        ChatMessage.create({ user: game.user._id, speaker: ChatMessage.getSpeaker({ actor: this }), content: content, rolls: [roll] });
-        this._applyMagicCosts(pertePV, perteSF);
+        message += `</div>`;
+
+        ChatMessage.create({
+            speaker: ChatMessage.getSpeaker({ actor: this }),
+            content: message
+        });
     }
 
     async _applyMagicCosts(pertePV, perteSF) {
