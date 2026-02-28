@@ -114,6 +114,14 @@ export class BrigandyneActorSheet extends HandlebarsApplicationMixin(ActorSheetV
       // Savoir si la fiche est verrouillée (par défaut: non)
     context.isLocked = this.actor.getFlag("brigandyne2appv2", "sheetLocked") || false;
 
+    // PRÉPARATION DES CASES À COCHER DE MAGIE
+        const magIndice = Math.floor((this.actor.system.stats.mag?.total || 0) / 10);
+        const uses = this.actor.getFlag("brigandyne2appv2", "magicUses") || { tour: 0, sortilege: 0, rituel: 0 };
+        
+        context.toursBoxes = Array.from({length: magIndice}, (_, i) => ({ value: i + 1, checked: i < uses.tour }));
+        context.sortsBoxes = Array.from({length: magIndice}, (_, i) => ({ value: i + 1, checked: i < uses.sortilege }));
+        context.rituelBox = { value: 1, checked: uses.rituel > 0 };
+
     return context;
   }
 
@@ -166,6 +174,26 @@ export class BrigandyneActorSheet extends HandlebarsApplicationMixin(ActorSheetV
             ChatMessage.create({ user: game.user._id, speaker: ChatMessage.getSpeaker({ actor: this.actor }), content: content, rolls: [roll] });
         }
     });
+    // CLIC SUR LES CASES DE MAGIE
+        html.find('.spell-box').click(async ev => {
+            ev.preventDefault();
+            const typeBox = ev.currentTarget.dataset.type; // "tours", "sorts" ou "rituels"
+            const clickedValue = parseInt(ev.currentTarget.dataset.value);
+            
+            const uses = this.actor.getFlag("brigandyne2appv2", "magicUses") || { tour: 0, sortilege: 0, rituel: 0 };
+            
+            // Correspondance entre ton dataset HTML et la clé de notre Flag
+            const flagKey = typeBox === "tours" ? "tour" : (typeBox === "sorts" ? "sortilege" : "rituel");
+            
+            // Si on clique sur la case qui est actuellement la limite, on la décoche (on retire 1). Sinon, on coche jusqu'à cette valeur.
+            if (uses[flagKey] === clickedValue) {
+                uses[flagKey] = clickedValue - 1;
+            } else {
+                uses[flagKey] = clickedValue;
+            }
+            
+            await this.actor.setFlag("brigandyne2appv2", "magicUses", uses);
+        });
     // ==========================================
     // DRAG & DROP UNIVERSEL (V12 & V13)
     // ==========================================
@@ -197,6 +225,30 @@ export class BrigandyneActorSheet extends HandlebarsApplicationMixin(ActorSheetV
         html.addClass("locked");
     } else {
         html.removeClass("locked");
+    }
+    // ==========================================
+    // BOUTON : REPOS DU MAGE (Reset Magie)
+    // ==========================================
+    const resetMagicBtn = this.element.querySelector('[data-action="resetMagic"]');
+    if (resetMagicBtn) {
+        resetMagicBtn.addEventListener("click", async (ev) => {
+            ev.preventDefault();
+            
+            // Sécurité : on demande confirmation
+            const confirmRest = await Dialog.confirm({
+                title: "Repos du Mage",
+                content: `<p><b>${this.actor.name}</b> s'est-il reposé au moins 8 heures ?</p><p><i>Cela remettra ses compteurs d'utilisations de sorts (Tours, Sortilèges et Rituels) à zéro.</i></p>`,
+                yes: () => true,
+                no: () => false,
+                defaultYes: false
+            });
+
+            // Si le joueur confirme "Oui"
+            if (confirmRest) {
+                await this.actor.setFlag("brigandyne2appv2", "magicUses", { tour: 0, sortilege: 0, rituel: 0 });
+                ui.notifications.info(`✨ L'esprit de ${this.actor.name} est apaisé. Ses limites magiques sont réinitialisées !`);
+            }
+        });
     }
 
     html.find('[data-action="rollStat"]').click(this._onRoll.bind(this));
@@ -237,6 +289,10 @@ export class BrigandyneActorSheet extends HandlebarsApplicationMixin(ActorSheetV
 
 async _onDrop(event) {
     
+    // 🛑 INDISPENSABLE EN APPV2 : On bloque l'événement natif pour éviter les doublons fantômes !
+    event.preventDefault();
+    event.stopPropagation();
+    
     // 0. Sécurité : empêcher le drop si la fiche est verrouillée
     if (this.actor.getFlag("brigandyne2appv2", "sheetLocked")) {
         ui.notifications.warn("🔒 La fiche est verrouillée ! Déverrouillez-la pour ajouter un objet.");
@@ -245,59 +301,98 @@ async _onDrop(event) {
 
     // 1. Récupération des données du lâcher
     const data = TextEditor.getDragEventData(event);
-    
-    // 2. Si ce n'est pas un Item (ex: ActiveEffect, Macro), on laisse Foundry gérer
-    if (data.type !== "Item") {
-        return super._onDrop(event);
-    }
+    if (data.type !== "Item") return super._onDrop(event);
 
-    // 3. SÉCURITÉ ET TRI : Si l'objet provient DÉJÀ de la fiche de ce personnage 
-    // (parce que le joueur essaie de trier/déplacer la ligne), on laisse Foundry faire le tri.
-    if (data.uuid && data.uuid.startsWith(this.actor.uuid)) {
-        return super._onDrop(event);
-    }
+    // 2. Si l'objet provient DÉJÀ de la fiche, on laisse Foundry faire le tri
+    if (data.uuid && data.uuid.startsWith(this.actor.uuid)) return super._onDrop(event);
 
-    // --- 4. LOGIQUE DE VÉRIFICATION (Création d'un nouvel objet) ---
+    // 3. Récupération des données de l'objet
     const item = await Item.implementation.fromDropData(data);
     const itemData = item.toObject();
 
-    const magScore = this.actor.system.stats?.mag?.total || 0;
-    const cnsIndice = this.actor.system.stats?.cns?.indice || 0; 
-        
-    let maxDomaines = 1;
-    if (magScore >= 50 && magScore <= 69) maxDomaines = 2;
-    else if (magScore >= 70 && magScore <= 89) maxDomaines = 3;
-    else if (magScore >= 90 && magScore <= 99) maxDomaines = 4;
-    else if (magScore >= 100) maxDomaines = 5;
-
-    // Anti-doublon strict pour éviter de glisser deux fois la même épée
+    // 4. Anti-doublon strict
     const isDuplicate = this.actor.items.some(i => i.name === itemData.name && i.type === itemData.type);
     if (isDuplicate) {
         ui.notifications.info(`L'objet ${itemData.name} est déjà sur la fiche.`);
         return false;
     }
 
+    // ==========================================
+    // CALCUL ROBUSTE DES STATS
+    // ==========================================
+    const magStat = this.actor.system.stats?.mag || {};
+    const cnsStat = this.actor.system.stats?.cns || {};
+
+    const magScore = magStat.total !== undefined ? magStat.total : (magStat.value || 0) + ((magStat.progression || 0) * 5);
+    const cnsScore = cnsStat.total !== undefined ? cnsStat.total : (cnsStat.value || 0) + ((cnsStat.progression || 0) * 5);
+    const cnsIndice = Math.floor(cnsScore / 10);
+
+    // ==========================================
+    // RÈGLES DES DOMAINES MAGIQUES
+    // ==========================================
     if (itemData.type === "domaine") {
+        let maxDomaines = 1;
+        if (magScore >= 50 && magScore <= 69) maxDomaines = 2;
+        else if (magScore >= 70 && magScore <= 89) maxDomaines = 3;
+        else if (magScore >= 90 && magScore <= 99) maxDomaines = 4;
+        else if (magScore >= 100) maxDomaines = 5;
+
         const nbDomaines = this.actor.items.filter(i => i.type === "domaine").length;
-        if (nbDomaines >= maxDomaines) { ui.notifications.error(`Limite de domaines atteinte (${maxDomaines}) !`); return false; }
+        if (nbDomaines >= maxDomaines) { 
+            ui.notifications.error(`Limite de Domaines atteinte (${maxDomaines} max avec ${magScore} en MAG) !`); 
+            return false; 
+        }
     }
 
+    // ==========================================
+    // RÈGLES STRICTES DE LA MAGIE (SORTS)
+    // ==========================================
     if (itemData.type === "sort") {
-        const isTour = itemData.system.type_sort === "tour";
-        const nbTours = this.actor.items.filter(i => i.type === "sort" && i.system.type_sort === "tour").length;
-        const nbSorts = this.actor.items.filter(i => i.type === "sort" && i.system.type_sort !== "tour").length;
+        const isPJ = this.actor.type === "personnage";
+        
+        if (isPJ) {
+            // Normalisation : On force les minuscules et on retire les espaces pour éviter les bugs
+            const incomingType = (itemData.system.type_sort || "").trim().toLowerCase();
+            const isTour = incomingType === "tour";
+            
+            let nbTours = 0;
+            let nbSorts = 0;
+            
+            // On recompte tout proprement
+            for (let i of this.actor.items) {
+                if (i.type === "sort") {
+                    const existingType = (i.system.type_sort || "").trim().toLowerCase();
+                    if (existingType === "tour") nbTours++;
+                    else nbSorts++;
+                }
+            }
 
-        if (isTour && nbTours >= cnsIndice) ui.notifications.warn(`Attention : Limite de création de Tours dépassée.`);
-        if (!isTour && nbSorts >= cnsIndice) ui.notifications.warn(`Attention : Limite de création de Sorts dépassée.`);
+            // 👁️ LE MOUCHARD : Affiche ce que voit le système dans la console (F12)
+            console.log(`[Magie Drop] CNS Indice: ${cnsIndice} | Tours connus: ${nbTours} | Sorts connus: ${nbSorts} | Drop type: ${incomingType}`);
+
+            // A. Limite d'apprentissage (*CNS*)
+            if (isTour && nbTours >= cnsIndice) {
+                ui.notifications.warn(`Attention : Limite d'apprentissage de Tours dépassée (*CNS* : ${cnsIndice}).`);
+                return false;
+            }
+            if (!isTour && nbSorts >= cnsIndice) {
+                ui.notifications.warn(`Attention : Limite d'apprentissage de Sorts dépassée (*CNS* : ${cnsIndice}).`);
+                return false;
+            }
+        }
     }
 
+    // ==========================================
+    // RÈGLES DES CARRIÈRES ET ORIGINES
+    // ==========================================
     if (["origine", "archetype", "carriere"].includes(itemData.type)) {
         if (this.actor.type === "pnj") { ui.notifications.warn("Les PNJ n'ont pas ça !"); return false; }
         if (this.actor.items.some(i => i.type === itemData.type)) { ui.notifications.error(`Un(e) ${itemData.type} existe déjà !`); return false; }
     }
 
-    // 5. Création manuelle de l'objet
+    // 5. Création finale de l'objet
     const created = await Item.create(itemData, { parent: this.actor });
+    
     if (created && created.type === "origine") {
         let ptsDestin = Number(created.system.destin) || 0;
         if (ptsDestin > 0) {
@@ -306,6 +401,66 @@ async _onDrop(event) {
         }
     }
   }
+  async _onDropItemCreate(itemData) {
+        let items = Array.isArray(itemData) ? itemData : [itemData];
+        
+        // --- VARIABLES GLOBALES DE MAGIE ---
+        const isStrictDomains = game.settings.get("brigandyne2appv2", "strictMagicDomains");
+        
+        // 1. On calcule l'Indice de CNS (*CNS*)
+        const cnsTotal = this.actor.system.stats.cns?.total || 0;
+        const cnsIndice = Math.floor(cnsTotal / 10); // C'est ça la vraie limite !
+        
+        // 2. On compte combien de sorts le PJ possède déjà dans chaque catégorie
+        const sortsInventaire = this.actor.items.filter(i => i.type === "sort");
+        const nbTours = sortsInventaire.filter(i => i.system.type_sort === "tour").length;
+        const nbSortsRituels = sortsInventaire.filter(i => i.system.type_sort !== "tour").length;
+
+        // 3. On prépare les Domaines pour la vérification
+        const domains = this.actor.items.filter(i => i.type === "domaine");
+        const domainTexts = domains.map(d => d.system.description || "").join(" ");
+        
+        items = items.filter(item => {
+            if (item.type === "sort") {
+                
+                // ==========================================
+                // VÉRIFICATION 1 : LA LIMITE D'APPRENTISSAGE (*CNS*)
+                // ==========================================
+                if (item.system?.type_sort === "tour") {
+                    if (nbTours >= cnsIndice) {
+                        ui.notifications.error(`🧠 Mémoire saturée ! Avec un indice de *CNS* de ${cnsIndice}, ${this.actor.name} ne peut pas mémoriser plus de ${cnsIndice} Tours de magie.`);
+                        return false; // Bloque l'ajout
+                    }
+                } else {
+                    if (nbSortsRituels >= cnsIndice) {
+                        ui.notifications.error(`🧠 Mémoire saturée ! Avec un indice de *CNS* de ${cnsIndice}, ${this.actor.name} ne peut pas mémoriser plus de ${cnsIndice} Sortilèges/Rituels au total.`);
+                        return false; // Bloque l'ajout
+                    }
+                }
+
+                // ==========================================
+                // VÉRIFICATION 2 : LE DOMAINE (Bouclier Anti-Triche)
+                // ==========================================
+                if (isStrictDomains) {
+                    if (domains.length === 0) {
+                        ui.notifications.error(`🛑 Ce personnage ne possède aucun Domaine Magique !`);
+                        return false;
+                    }
+                    
+                    const cleanName = item.name.replace("☠️", "").trim();
+                    if (!domainTexts.includes(cleanName)) {
+                        ui.notifications.error(`🛑 Le sort "${cleanName}" n'appartient à aucun Domaine connu par ce personnage.`);
+                        return false;
+                    }
+                }
+            }
+            
+            return true; // Tout est en règle, on l'ajoute !
+        });
+        
+        if (items.length === 0) return false;
+        return super._onDropItemCreate(items);
+    }
 
   _onRoll(event) { event.preventDefault(); const dataset = event.currentTarget.dataset; if (dataset.key) this.actor.rollStat(dataset.key); }
   _onItemRoll(event) { event.preventDefault(); const itemId = event.currentTarget.closest(".item").dataset.itemId; if (itemId) this.actor.rollWeapon(itemId); }
