@@ -122,6 +122,37 @@ export class BrigandyneActorSheet extends HandlebarsApplicationMixin(ActorSheetV
         context.sortsBoxes = Array.from({length: magIndice}, (_, i) => ({ value: i + 1, checked: i < uses.sortilege }));
         context.rituelBox = { value: 1, checked: uses.rituel > 0 };
 
+        // ==========================================
+        // VICES & VERTUS (Effet Miroir)
+        // ==========================================
+        const viceVertuPairs = [
+            { key: 'avare', vice: 'Avare', vertu: 'Généreux' },
+            { key: 'colerique', vice: 'Colérique', vertu: 'Prudent' },
+            { key: 'cruel', vice: 'Cruel', vertu: 'Clément' },
+            { key: 'envieux', vice: 'Envieux', vertu: 'Bienveillant' },
+            { key: 'gourmand', vice: 'Gourmand', vertu: 'Sobre' },
+            { key: 'lache', vice: 'Lâche', vertu: 'Valeureux' },
+            { key: 'luxurieux', vice: 'Luxurieux', vertu: 'Chaste' },
+            { key: 'orgueilleux', vice: 'Orgueilleux', vertu: 'Humble' },
+            { key: 'paresseux', vice: 'Paresseux', vertu: 'Travailleur' },
+            { key: 'trompeur', vice: 'Trompeur', vertu: 'Loyal' }
+        ];
+
+        context.vicesVertus = viceVertuPairs.map(p => {
+            let val = this.actor.system.vices?.[p.key] || 0;
+            return {
+                ...p,
+                viceVal: val > 0 ? `+${val}` : val,
+                vertuVal: -val > 0 ? `+${-val}` : -val,
+                isViceActive: val > 0,
+                isVertuActive: val < 0
+            };
+        });
+
+        // On récupère le texte de l'Archétype pour l'afficher en consigne
+        const archetype = this.actor.items.find(i => i.type === 'archetype');
+        context.archetypeVicesText = archetype ? archetype.system.vices_vertus : null;
+
     return context;
   }
 
@@ -155,6 +186,17 @@ export class BrigandyneActorSheet extends HandlebarsApplicationMixin(ActorSheetV
             callback: path => this.actor.update({ img: path })
         }).browse();
     });
+    // CLIC SUR LES VICES ET VERTUS
+        html.find('[data-action="adjustVice"]').click(async ev => {
+            ev.preventDefault();
+            const key = ev.currentTarget.dataset.key;
+            const delta = parseInt(ev.currentTarget.dataset.delta);
+            const currentVal = this.actor.system.vices?.[key] || 0;
+            
+            // On limite entre -3 (Vertu Max) et +3 (Vice Max)
+            let newVal = Math.max(-3, Math.min(3, currentVal + delta));
+            await this.actor.update({ [`system.vices.${key}`]: newVal });
+        });
     
     // Au redessin, on restaure l'onglet mémorisé
     html.find(`[data-action="changeTab"][data-tab="${this._activeTab}"]`).addClass('active');
@@ -289,7 +331,7 @@ export class BrigandyneActorSheet extends HandlebarsApplicationMixin(ActorSheetV
 
 async _onDrop(event) {
     
-    // 🛑 INDISPENSABLE EN APPV2 : On bloque l'événement natif pour éviter les doublons fantômes !
+    // 🛑 INDISPENSABLE EN APPV2 : On bloque l'événement natif pour éviter les doublons fantômes
     event.preventDefault();
     event.stopPropagation();
     
@@ -318,14 +360,15 @@ async _onDrop(event) {
     }
 
     // ==========================================
-    // CALCUL ROBUSTE DES STATS
+    // RÉCUPÉRATION DES STATS & XP
     // ==========================================
     const magStat = this.actor.system.stats?.mag || {};
     const cnsStat = this.actor.system.stats?.cns || {};
-
+    
     const magScore = magStat.total !== undefined ? magStat.total : (magStat.value || 0) + ((magStat.progression || 0) * 5);
     const cnsScore = cnsStat.total !== undefined ? cnsStat.total : (cnsStat.value || 0) + ((cnsStat.progression || 0) * 5);
     const cnsIndice = Math.floor(cnsScore / 10);
+    const currentXP = this.actor.system.experience?.value || 0;
 
     // ==========================================
     // RÈGLES DES DOMAINES MAGIQUES
@@ -345,39 +388,134 @@ async _onDrop(event) {
     }
 
     // ==========================================
-    // RÈGLES STRICTES DE LA MAGIE (SORTS)
+    // RÈGLES D'APPRENTISSAGE DE LA MAGIE
     // ==========================================
-    if (itemData.type === "sort") {
-        const isPJ = this.actor.type === "personnage";
+    if (itemData.type === "sort" && this.actor.type === "personnage") {
         
-        if (isPJ) {
-            // Normalisation : On force les minuscules et on retire les espaces pour éviter les bugs
-            const incomingType = (itemData.system.type_sort || "").trim().toLowerCase();
-            const isTour = incomingType === "tour";
+        // On détermine tout de suite si c'est un Tour pour adapter les règles
+        const cleanType = (str) => (str || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const incomingType = cleanType(itemData.system.type_sort);
+        const isTour = incomingType === "tour";
+
+        // 1. CONDITION ABSOLUE : MAG + Diff >= 40 (UNIQUEMENT POUR SORTS ET RITUELS)
+        const spellDiff = Number(itemData.system.difficulte) || 0;
+        if (!isTour && (magScore + spellDiff) < 40) {
+            ui.notifications.error(`Sort trop complexe ! (MAG ${magScore} + Diff ${spellDiff} = ${magScore + spellDiff}. Requis: >= 40).`);
+            return false;
+        }
+
+        // 2. VÉRIFICATION DU DOMAINE
+        const domains = this.actor.items.filter(i => i.type === "domaine");
+        const domainTexts = domains.map(d => d.system.description || "").join(" ");
+        const cleanName = itemData.name.replace("☠️", "").trim();
+        const isInDomain = domains.length > 0 && domainTexts.includes(cleanName);
+
+        // 3. COMPTAGE POUR LES EMPLACEMENTS GRATUITS (*CNS*)
+        let nbTours = 0; let nbSorts = 0;
+        for (let i of this.actor.items) {
+            if (i.type === "sort") {
+                const existingType = cleanType(i.system.type_sort);
+                if (existingType === "tour") nbTours++;
+                else if (existingType === "sortilege" || existingType === "rituel") nbSorts++;
+            }
+        }
+
+        // Est-ce un sort gratuit (Slot disponible ET dans le Domaine) ?
+        let isFree = false;
+        if (isInDomain) {
+            if (isTour && nbTours < cnsIndice) isFree = true;
+            if (!isTour && nbSorts < cnsIndice) isFree = true;
+        }
+
+        // 4. GESTION DU COÛT EN XP ET DE L'APPRENTISSAGE
+        if (!isFree) {
+            let xpCost = isTour ? 50 : 100;
+            let cause = [];
             
-            let nbTours = 0;
-            let nbSorts = 0;
-            
-            // On recompte tout proprement
-            for (let i of this.actor.items) {
-                if (i.type === "sort") {
-                    const existingType = (i.system.type_sort || "").trim().toLowerCase();
-                    if (existingType === "tour") nbTours++;
-                    else nbSorts++;
+            if (isTour && nbTours >= cnsIndice) cause.push(`Limite initiale de Tours atteinte`);
+            if (!isTour && nbSorts >= cnsIndice) cause.push(`Limite initiale de Sorts atteinte`);
+            if (!isInDomain) {
+                xpCost += 50; 
+                cause.push("Sort Hors-Domaine (+50 XP)");
+            }
+
+            if (currentXP < xpCost) {
+                ui.notifications.error(`Pas assez d'expérience ! Ce sort coûte ${xpCost} XP (${cause.join(", ")}).`);
+                return false;
+            }
+
+            // Boîte de dialogue (Promesse) pour valider l'achat
+            const confirm = await new Promise((resolve) => {
+                new Dialog({
+                    title: "Apprentissage d'un nouveau sort",
+                    content: `<p>L'étude de <b>${itemData.name}</b> va vous demander du temps et de l'expérience.</p>
+                              <ul style="color: #8b0000; font-weight: bold;">
+                                <li>Coût : ${xpCost} XP</li>
+                                <li style="font-weight: normal; font-size: 0.9em; font-style: italic;">Raison : ${cause.join(" | ")}</li>
+                              </ul>
+                              ${!isTour ? `<p><b>Attention :</b> Le système va automatiquement lancer un test de Connaissances (CNS) pour déterminer votre temps d'étude.</p>` : `<p>Les Tours s'apprennent automatiquement en 1 journée.</p>`}
+                              <p>Voulez-vous payer les XP et débuter l'apprentissage ?</p>`,
+                    buttons: {
+                        yes: { icon: '<i class="fas fa-book-reader"></i>', label: "Payer et Étudier", callback: () => resolve(true) },
+                        no: { icon: '<i class="fas fa-times"></i>', label: "Annuler", callback: () => resolve(false) }
+                    },
+                    default: "yes",
+                    close: () => resolve(false)
+                }).render(true);
+            });
+
+            if (!confirm) return false;
+
+            // Déduction XP
+            await this.actor.update({"system.experience.value": currentXP - xpCost});
+
+            // LOGIQUE D'APPRENTISSAGE AUTOMATISÉE
+            if (!isTour) {
+                let scoreTest = cnsScore + spellDiff;
+                let finalScore = scoreTest;
+                
+                // Si hors domaine, on tire deux fois et on garde le pire (Désavantage)
+                let roll1 = await new Roll("1d100").evaluate({async: true});
+                let result = roll1.total;
+                
+                if (!isInDomain) {
+                    let roll2 = await new Roll("1d100").evaluate({async: true});
+                    result = Math.max(roll1.total, roll2.total); // Garde le pire
                 }
-            }
 
-            // 👁️ LE MOUCHARD : Affiche ce que voit le système dans la console (F12)
-            console.log(`[Magie Drop] CNS Indice: ${cnsIndice} | Tours connus: ${nbTours} | Sorts connus: ${nbSorts} | Drop type: ${incomingType}`);
+                let ru = result % 10;
+                let isSuccess = result <= finalScore;
+                let isCrit = ru === 0 && isSuccess;
+                let isFumble = ru === 0 && !isSuccess;
+                let isMajSuccess = isSuccess && result <= 9;
+                let isMajFail = !isSuccess && result >= 91;
 
-            // A. Limite d'apprentissage (*CNS*)
-            if (isTour && nbTours >= cnsIndice) {
-                ui.notifications.warn(`Attention : Limite d'apprentissage de Tours dépassée (*CNS* : ${cnsIndice}).`);
-                return false;
-            }
-            if (!isTour && nbSorts >= cnsIndice) {
-                ui.notifications.warn(`Attention : Limite d'apprentissage de Sorts dépassée (*CNS* : ${cnsIndice}).`);
-                return false;
+                let tempsApprentissage = "";
+                let couleur = "#4CAF50";
+
+                if (isSuccess) {
+                    if (isCrit) tempsApprentissage = "1 jour (Réussite Critique !)";
+                    else if (isMajSuccess) tempsApprentissage = `${Math.max(1, Math.floor(ru / 2))} jour(s) (Réussite Majeure)`;
+                    else tempsApprentissage = `${ru} jour(s)`;
+                } else {
+                    couleur = "#b71c1c";
+                    if (isFumble) tempsApprentissage = "Impossible d'apprendre pour le moment. Réessayez le mois prochain (Échec Critique !)";
+                    else if (isMajFail) tempsApprentissage = `${ru * 2} semaine(s) (Échec Majeur)`;
+                    else tempsApprentissage = `${ru} semaine(s)`;
+                }
+
+                let chatMsg = `
+                <div style="background: rgba(0,0,0,0.05); border: 2px solid ${couleur}; padding: 10px; border-radius: 5px;">
+                    <h3 style="color: ${couleur}; border-bottom: 1px solid ${couleur}; margin-bottom: 5px;">Étude de ${itemData.name}</h3>
+                    <p><b>Seuil (CNS ${cnsScore} + Diff ${spellDiff}) :</b> ${finalScore}% ${!isInDomain ? '<br><i>(1 Désavantage : Hors-Domaine)</i>' : ''}</p>
+                    <div style="text-align: center; font-size: 1.2em; font-weight: bold; margin: 10px 0;">Jet : ${result} ${isSuccess ? '✅' : '❌'}</div>
+                    <p><b>Temps d'étude requis :</b> ${tempsApprentissage}</p>
+                    ${!isSuccess ? `<p style="font-size: 0.8em; font-style: italic; color: #555;">(Le sort a tout de même été ajouté au grimoire, mais il ne sera utilisable qu'après cette période d'étude intensive.)</p>` : ''}
+                </div>`;
+
+                ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: this.actor }), content: chatMsg });
+            } else {
+                ui.notifications.info(`Le Tour ${itemData.name} a été maîtrisé en 1 journée d'entraînement.`);
             }
         }
     }
@@ -390,14 +528,44 @@ async _onDrop(event) {
         if (this.actor.items.some(i => i.type === itemData.type)) { ui.notifications.error(`Un(e) ${itemData.type} existe déjà !`); return false; }
     }
 
-    // 5. Création finale de l'objet
+    // ==========================================
+    // 5. CRÉATION FINALE ET AUTOMATISATIONS
+    // ==========================================
     const created = await Item.create(itemData, { parent: this.actor });
     
+    // On n'automatise QUE l'Origine (qui n'intervient qu'à la création)
     if (created && created.type === "origine") {
+        
+        // A. Initialisation du Destin
         let ptsDestin = Number(created.system.destin) || 0;
         if (ptsDestin > 0) {
             await this.actor.update({ "system.destin.value": ptsDestin });
             ui.notifications.info(`Destin initialisé à ${ptsDestin}.`);
+        }
+
+        // B. Création automatique des Atouts (Talents & Spécial)
+        const talentsText = created.system.talents_auto || "";
+        const specialText = created.system.special || "";
+        
+        // On fusionne les textes, on coupe à chaque virgule, et on nettoie les espaces
+        const allTraits = [talentsText, specialText].join(",")
+            .split(",")
+            .map(t => t.trim())
+            .filter(t => t.length > 2); // On ignore les bouts de texte trop courts
+
+        if (allTraits.length > 0) {
+            const atoutsToCreate = allTraits.map(nomAtout => ({
+                name: nomAtout,
+                type: "atout",
+                img: "icons/svg/upgrade.svg",
+                system: {
+                    type_atout: "Talent",
+                    description: `<p><em>Obtenu automatiquement via l'Origine : <b>${created.name}</b>. N'oubliez pas de lier cet atout à une caractéristique si nécessaire en l'éditant.</em></p>`
+                }
+            }));
+            
+            await this.actor.createEmbeddedDocuments("Item", atoutsToCreate);
+            ui.notifications.info(`✨ ${atoutsToCreate.length} Atouts d'Origine créés automatiquement !`);
         }
     }
   }
