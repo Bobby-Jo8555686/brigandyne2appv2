@@ -76,7 +76,7 @@ export class BrigandyneActor extends Actor {
         if (this.type === "personnage") {
             system.vitalite.max = Math.floor(stats.for.total / 5) + Math.floor(stats.end.total / 5) + stats.vol.indice + originVitBonus;
             system.sangfroid.max = Math.floor(stats.vol.total / 5) + Math.floor(stats.cns.total / 5) + stats.com.indice + originSfBonus;
-	} else if (this.type === "pnj") {
+        } else if (this.type === "pnj") {
             // 1. Calcul complet (comme les PJ) pour les Boss, Créatures
             let vitMax = Math.floor(stats.for.total / 5) + Math.floor(stats.end.total / 5) + stats.vol.indice;
             let sfMax = Math.floor(stats.vol.total / 5) + Math.floor(stats.cns.total / 5) + stats.com.indice;
@@ -248,7 +248,7 @@ export class BrigandyneActor extends Actor {
     // ============================================
     // 3. JETS DE MAGIE ULTIMES
     // ============================================
-async rollSpell(itemId) {
+    async rollSpell(itemId) {
         const sort = this.items.get(itemId);
         if (!sort) return;
 
@@ -487,7 +487,7 @@ async rollSpell(itemId) {
         await this.update(updates);
     }
 
-    // ============================================
+// ============================================
     // 4. JETS D'ARMES
     // ============================================
     async rollWeapon(itemId) {
@@ -571,14 +571,11 @@ async rollSpell(itemId) {
             
             ${atoutsHtml}
 
-            <div class="form-group" style="margin-bottom: 10px;">
-                <label style="font-weight: bold; color: #111;">Coup Tordu (Chifoumi MJ) :</label>
-                <select id="chifoumi" style="width: 100%;">
-                    <option value="none">Ne pas tenter</option>
-                    <option value="win">Gagné (+1 Avantage)</option>
-                    <option value="lose">Perdu (1 Désavantage)</option>
-                </select>
+            <div class="form-group" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #8b0000; padding: 5px 8px; border-radius: 3px; background: rgba(139, 0, 0, 0.05);">
+                <label style="font-weight: bold; color: #8b0000; font-family: 'Georgia', serif; text-transform: uppercase;">Tenter un Coup Tordu</label>
+                <input type="checkbox" id="tenterChifoumi" style="width: 18px; height: 18px; cursor: pointer;">
             </div>
+
             <div class="form-group" style="margin-bottom: 15px; border-top: 1px solid #ccc; padding-top: 10px;">
                 <label style="font-weight: bold; color: #111;">Avantages / Désav. circonstanciels :</label>
                 <input type="number" id="advCirconstances" value="0" style="width: 100%; text-align: center;">
@@ -597,12 +594,142 @@ async rollSpell(itemId) {
                         let totalBonusAtouts = 0;
                         html.find('.atout-bonus:checked').each(function() { totalBonusAtouts += Number($(this).val()); });
 
+                        const wantsChifoumi = html.find('#tenterChifoumi').is(':checked');
+                        let chifoumiResult = "none";
+
+                        // ==========================================
+                        // LE MINI-JEU DANS UNE FENÊTRE DÉDIÉE
+                        // ==========================================
+                        if (wantsChifoumi) {
+                            chifoumiResult = await new Promise((resolve) => {
+                                let chifoumiHtml = `
+                                <div style="text-align: center; margin-bottom: 10px; font-family: 'Georgia', serif;">
+                                    <p style="color: #333; font-weight: bold;">Choisissez votre ruse :</p>
+                                    <div style="display: flex; justify-content: space-around; align-items: center;">
+                                        <label class="chifoumi-choice" style="cursor: pointer; opacity: 1; border: 2px solid #8b0000; border-radius: 5px; padding: 2px; transition: all 0.2s; background: #fff;" title="Pierre">
+                                            <input type="radio" name="chifoumi" value="pierre" checked style="display: none;">
+                                            <img src="systems/brigandyne2appv2/assets/ui/Pierre.webp" style="width: 70px; height: 70px; border: none; border-radius: 3px; object-fit: cover;">
+                                        </label>
+                                        <label class="chifoumi-choice" style="cursor: pointer; opacity: 0.4; border: 2px solid transparent; border-radius: 5px; padding: 2px; transition: all 0.2s;" title="Feuille">
+                                            <input type="radio" name="chifoumi" value="feuille" style="display: none;">
+                                            <img src="systems/brigandyne2appv2/assets/ui/Papier.webp" style="width: 70px; height: 70px; border: none; border-radius: 3px; object-fit: cover;">
+                                        </label>
+                                        <label class="chifoumi-choice" style="cursor: pointer; opacity: 0.4; border: 2px solid transparent; border-radius: 5px; padding: 2px; transition: all 0.2s;" title="Ciseaux">
+                                            <input type="radio" name="chifoumi" value="ciseaux" style="display: none;">
+                                            <img src="systems/brigandyne2appv2/assets/ui/Ciseaux.webp" style="width: 70px; height: 70px; border: none; border-radius: 3px; object-fit: cover;">
+                                        </label>
+                                    </div>
+                                </div>
+                                `;
+
+                                new Dialog({
+                                    title: "Coup Tordu !",
+                                    content: chifoumiHtml,
+                                    render: (h) => {
+                                        h.find('.chifoumi-choice').click(function() {
+                                            h.find('.chifoumi-choice').css({ opacity: 0.4, borderColor: "transparent", background: "transparent" });
+                                            $(this).css({ opacity: 1, borderColor: "#8b0000", background: "#fff" });
+                                        });
+                                    },
+                                    buttons: {
+                                        jouer: {
+                                            icon: '<i class="fas fa-fist-raised"></i>',
+                                            label: "Tenter le coup !",
+                                            callback: (h) => {
+                                                const playerChoice = h.find('input[name="chifoumi"]:checked').val();
+                                                const mjChoices = ["pierre", "feuille", "ciseaux"];
+                                                const mjRoll = mjChoices[Math.floor(Math.random() * mjChoices.length)];
+                                                
+                                                const imgChifoumi = {
+                                                    pierre: "systems/brigandyne2appv2/assets/ui/Pierre.webp",
+                                                    feuille: "systems/brigandyne2appv2/assets/ui/Papier.webp",
+                                                    ciseaux: "systems/brigandyne2appv2/assets/ui/Ciseaux.webp"
+                                                };
+
+                                                let finalRes = "none";
+                                                let headerColor = "";
+                                                let chifoumiMsg = "";
+
+                                                if (playerChoice === mjRoll) {
+                                                    finalRes = "none";
+                                                    headerColor = "#b0bec5";
+                                                    chifoumiMsg = `
+                                                        <b style="color: #333; font-size: 1.1em; text-transform: uppercase;">Égalité !</b>
+                                                        <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin: 10px 0;">
+                                                            <img src="${imgChifoumi[playerChoice]}" width="45" height="45" style="border: 2px solid #333; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.3);">
+                                                            <span style="font-weight: bold; font-size: 1.2em; color: #555;">VS</span>
+                                                            <img src="${imgChifoumi[mjRoll]}" width="45" height="45" style="border: 2px solid #333; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.3);">
+                                                        </div>
+                                                        <i style="color: #333;">Aucun avantage ni désavantage.</i>`;
+                                                } else if (
+                                                    (playerChoice === "pierre" && mjRoll === "ciseaux") ||
+                                                    (playerChoice === "feuille" && mjRoll === "pierre") ||
+                                                    (playerChoice === "ciseaux" && mjRoll === "feuille")
+                                                ) {
+                                                    finalRes = "win";
+                                                    headerColor = "#4CAF50";
+                                                    chifoumiMsg = `
+                                                        <b style="color: #2E7D32; font-size: 1.1em; text-transform: uppercase;">Coup Tordu réussi !</b>
+                                                        <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin: 10px 0;">
+                                                            <img src="${imgChifoumi[playerChoice]}" width="45" height="45" style="border: 3px solid #4CAF50; border-radius: 5px; box-shadow: 0 0 10px #4CAF50;">
+                                                            <span style="font-weight: bold; font-size: 1.2em; color: #555;">VS</span>
+                                                            <img src="${imgChifoumi[mjRoll]}" width="45" height="45" style="border: 2px solid #b71c1c; opacity: 0.6; border-radius: 5px; filter: grayscale(50%);">
+                                                        </div>
+                                                        <i style="color: #2E7D32; font-weight: bold;">Vous gagnez +1 Avantage !</i>`;
+                                                } else {
+                                                    finalRes = "lose";
+                                                    headerColor = "#b71c1c";
+                                                    chifoumiMsg = `
+                                                        <b style="color: #b71c1c; font-size: 1.1em; text-transform: uppercase;">Coup Tordu raté...</b>
+                                                        <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin: 10px 0;">
+                                                            <img src="${imgChifoumi[playerChoice]}" width="45" height="45" style="border: 2px solid #b71c1c; opacity: 0.6; border-radius: 5px; filter: grayscale(50%);">
+                                                            <span style="font-weight: bold; font-size: 1.2em; color: #555;">VS</span>
+                                                            <img src="${imgChifoumi[mjRoll]}" width="45" height="45" style="border: 3px solid #4CAF50; border-radius: 5px; box-shadow: 0 0 10px #4CAF50;">
+                                                        </div>
+                                                        <i style="color: #b71c1c; font-weight: bold;">Le MJ vous a vu venir : 1 Désavantage...</i>`;
+                                                }
+
+                                                ChatMessage.create({
+                                                    speaker: ChatMessage.getSpeaker({ actor: this }),
+                                                    content: `
+                                                    <div style="border: 2px solid ${headerColor}; padding: 8px; border-radius: 5px; background: rgba(0,0,0,0.05); text-align: center; font-family: 'Georgia', serif;">
+                                                        ${chifoumiMsg}
+                                                    </div>`
+                                                });
+
+                                                resolve(finalRes);
+                                            }
+                                        },
+                                        annuler: {
+                                            icon: '<i class="fas fa-times"></i>',
+                                            label: "Annuler le coup",
+                                            callback: () => resolve("none") // On fait l'attaque sans bonus/malus si le joueur se dégonfle
+                                        }
+                                    },
+                                    default: "jouer",
+                                    close: () => resolve("cancel") // Si on ferme avec la croix, on annule carrément l'attaque pour éviter les erreurs
+                                }).render(true);
+                            });
+                        }
+
+                        // Sécurité : si le joueur a fermé la fenêtre du chifoumi avec la croix rouge, on stoppe l'attaque
+                        if (chifoumiResult === "cancel") return;
+
                         const options = {
-                            tactique: html.find('#tactique').val(), chifoumi: html.find('#chifoumi').val(), advC: parseInt(html.find('#advCirconstances').val()) || 0,
-                            hasShield: hasShield, forIndice: forIndice, totalBonusAtouts: totalBonusAtouts,
-                            tirMelee: html.find('#tirMelee').is(':checked'), tirBoutPortant: html.find('#tirBoutPortant').is(':checked'),
-                            modTir: parseInt(html.find('#modTir').val()) || 0, cibleConsciente: html.find('#cibleConsciente').is(':checked'), lancerArme: html.find('#lancerArme').is(':checked')
+                            tactique: html.find('#tactique').val(), 
+                            chifoumi: chifoumiResult, 
+                            advC: parseInt(html.find('#advCirconstances').val()) || 0,
+                            hasShield: hasShield, 
+                            forIndice: forIndice, 
+                            totalBonusAtouts: totalBonusAtouts,
+                            tirMelee: html.find('#tirMelee').is(':checked'), 
+                            tirBoutPortant: html.find('#tirBoutPortant').is(':checked'),
+                            modTir: parseInt(html.find('#modTir').val()) || 0, 
+                            cibleConsciente: html.find('#cibleConsciente').is(':checked'), 
+                            lancerArme: html.find('#lancerArme').is(':checked')
                         };
+                        
+                        // L'attaque se lance toute seule avec le bon modificateur !
                         await this._executeWeaponRoll(weapon, options);
                     }
                 }
@@ -749,7 +876,6 @@ async rollSpell(itemId) {
                     let noteSbire = "";
                     try {
                         let nouvelleVie = targetActor.system.vitalite.value - degatsFinaux;
-                        // On vérifie d'abord si l'option du MJ est activée !
                         if (game.settings.get("brigandyne2appv2", "sbireOneHit") && targetActor.type === "pnj" && targetActor.system.type_pnj === "sbire" && degatsFinaux > 0) {
                             nouvelleVie = 0; noteSbire = "<br><span style='color: #ffcccc; font-weight: bold;'>💥 Le sbire est vaincu sur le coup !</span>";
                         }
@@ -788,7 +914,6 @@ async rollSpell(itemId) {
                 let protection = Number(this.system.protection?.value) || 0;
                 let degatsFinaux = Math.max(0, degatsBruts - protection);
                 let noteSbire = ""; let nouvelleVie = this.system.vitalite.value - degatsFinaux;
-                // On vérifie l'option ici aussi
                 if (game.settings.get("brigandyne2appv2", "sbireOneHit") && this.type === "pnj" && this.system.type_pnj === "sbire" && degatsFinaux > 0) {
                     nouvelleVie = 0; noteSbire = "<br><span style='color: #ffcccc; font-weight: bold;'>💥 Le sbire est fauché par la contre-attaque !</span>";
                 }
