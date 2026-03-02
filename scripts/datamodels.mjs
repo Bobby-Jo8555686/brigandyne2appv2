@@ -71,6 +71,21 @@ export class PersonnageData extends BrigandyneActorBase {
             experience: new SchemaField({
                 value: new NumberField({ initial: 0, min: 0, integer: true })
             }),
+            experience: new SchemaField({
+                value: new NumberField({ initial: 0, min: 0, integer: true })
+            }),
+            vices: new SchemaField({
+                avare: new NumberField({ initial: 0, integer: true }),
+                colerique: new NumberField({ initial: 0, integer: true }),
+                cruel: new NumberField({ initial: 0, integer: true }),
+                envieux: new NumberField({ initial: 0, integer: true }),
+                gourmand: new NumberField({ initial: 0, integer: true }),
+                lache: new NumberField({ initial: 0, integer: true }),
+                luxurieux: new NumberField({ initial: 0, integer: true }),
+                orgueilleux: new NumberField({ initial: 0, integer: true }),
+                paresseux: new NumberField({ initial: 0, integer: true }),
+                trompeur: new NumberField({ initial: 0, integer: true })
+            }),
             magie: new SchemaField({
                 uses: new SchemaField({
                     tours: new NumberField({ initial: 0, min: 0, integer: true }),
