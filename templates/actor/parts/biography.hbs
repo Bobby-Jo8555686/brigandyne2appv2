@@ -80,6 +80,38 @@
             </div>
         </div>
     </div>
+    <div class="item-section mb-15">
+    <div class="item-header gold mb-5">
+        <h3 class="item-title"><i class="fas fa-balance-scale"></i> Vices & Vertus</h3>
+    </div>
+    
+    {{#if archetypeVicesText}}
+    <div class="font-09 text-muted mb-10" style="padding: 10px; background: rgba(212, 175, 55, 0.1); border-left: 3px solid #d4af37; font-family: 'Georgia', serif;">
+        <strong>Personnalité de l'Archétype :</strong> <em>{{archetypeVicesText}}</em>
+    </div>
+    {{/if}}
+
+    <div class="vices-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+        {{#each vicesVertus}}
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.1); padding: 5px 10px; border-radius: 5px; border: 1px solid #333;">
+            
+            <div style="flex: 1; text-align: right; {{#if isViceActive}}color: #b71c1c; font-weight: bold;{{/if}}">
+                {{vice}} <span style="background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 3px; color: white;">{{viceVal}}</span>
+            </div>
+            
+            <div style="margin: 0 10px; display: flex; gap: 5px;">
+                <a style="cursor:pointer;" data-action="adjustVice" data-key="{{key}}" data-delta="1" title="Pencher vers le Vice"><i class="fas fa-plus-circle" style="color:#b71c1c;"></i></a>
+                <a style="cursor:pointer;" data-action="adjustVice" data-key="{{key}}" data-delta="-1" title="Pencher vers la Vertu"><i class="fas fa-plus-circle" style="color:#4CAF50;"></i></a>
+            </div>
+            
+            <div style="flex: 1; text-align: left; {{#if isVertuActive}}color: #4CAF50; font-weight: bold;{{/if}}">
+                <span style="background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 3px; color: white;">{{vertuVal}}</span> {{vertu}}
+            </div>
+
+        </div>
+        {{/each}}
+    </div>
+
     <h3 class="comp-header">Biographie Complète</h3>
     <div class="editor-container">
         <prose-mirror name="system.biography" toggled="true" value="{{system.biography}}" document-uuid="{{actor.uuid}}">
