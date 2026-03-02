@@ -111,55 +111,58 @@ Hooks.once("init", async function() {
         "systems/brigandyne2appv2/templates/actor/parts/magic.hbs",
         "systems/brigandyne2appv2/templates/actor/parts/biography.hbs"
     ]);
-    // ==========================================
+// ==========================================
     // TOKEN HUD : ACTIONS RAPIDES (Universel V12/V13)
     // ==========================================
     Hooks.on("renderTokenHUD", (hud, html, tokenData) => {
-        // 1. Vérification de l'option
         if (!game.settings.get("brigandyne2appv2", "enableTokenHUD")) return;
 
-        const actor = hud.object?.actor;
+        const tokenDoc = hud.document || hud.object?.document;
+        const actor = tokenDoc?.actor || canvas.tokens.get(tokenData.id || tokenData._id)?.actor;
         if (!actor) return;
 
-        // 2. Récupération des objets
         const armes = actor.items.filter(i => i.type === "arme");
         const sorts = actor.items.filter(i => i.type === "sort");
-
         if (armes.length === 0 && sorts.length === 0) return;
 
-        // 3. Bouclier de compatibilité V12/V13 (jQuery vs DOM Natif)
         const htmlElement = html.length ? html[0] : html;
+        const targetHud = htmlElement.id === "token-hud" ? htmlElement : (document.getElementById("token-hud") || htmlElement);
 
-        // 4. Création du container en DOM Natif
+        const oldCol = targetHud.querySelector(".brigandyne-hud-col");
+        if (oldCol) oldCol.remove();
+
         const actionCol = document.createElement("div");
         actionCol.className = "col right brigandyne-hud-col";
-        actionCol.style.cssText = "right: -190px; width: 180px; top: 0; position: absolute; display: flex; flex-direction: column; gap: 4px; z-index: 100;";
+        
+        // --- LES CORRECTIONS VISUELLES SONT ICI ---
+        // 1. left: calc(100% + 60px) -> Pousse la boîte au-delà de la colonne de droite native.
+        // 2. width: max-content -> Adapte la largeur au contenu le plus long.
+        actionCol.style.cssText = "position: absolute; left: calc(100% + 60px); top: 0; display: flex; flex-direction: column; gap: 4px; z-index: 100; width: max-content; min-width: 150px;";
 
         let innerHTML = "";
 
-        // --- SECTION ARMES ---
         if (armes.length > 0) {
             innerHTML += `<div style="color: white; font-weight: bold; border-bottom: 2px solid #8b0000; text-align: center; text-transform: uppercase; font-size: 0.8em; margin-bottom: 4px; text-shadow: 1px 1px 2px black;">⚔️ Armes</div>`;
             
             armes.forEach(arme => {
+                // white-space: nowrap empêche le texte de passer à la ligne, forçant la boîte à s'élargir.
                 innerHTML += `
-                    <div class="control-icon brigandyne-action" data-type="weapon" data-id="${arme.id}" title="${arme.name}" style="width: 100%; display: flex; align-items: center; justify-content: flex-start; padding: 2px 5px; border-radius: 5px; background: rgba(0,0,0,0.7); border: 1px solid #444; margin: 0; box-sizing: border-box; cursor: pointer; transition: background 0.2s;">
+                    <div class="control-icon brigandyne-action" data-type="weapon" data-id="${arme.id}" title="${arme.name}" style="display: flex; align-items: center; justify-content: flex-start; padding: 4px 10px 4px 5px; border-radius: 5px; background: rgba(0,0,0,0.7); border: 1px solid #444; margin: 0; box-sizing: border-box; cursor: pointer; transition: background 0.2s;">
                         <img src="${arme.img}" style="width: 24px; height: 24px; border: none; margin-right: 8px; border-radius: 3px;">
-                        <span style="color: white; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Georgia', serif;">${arme.name}</span>
+                        <span style="color: white; font-size: 0.9em; white-space: nowrap; font-family: 'Georgia', serif;">${arme.name}</span>
                     </div>
                 `;
             });
         }
 
-        // --- SECTION MAGIE ---
         if (sorts.length > 0) {
             innerHTML += `<div style="color: white; font-weight: bold; border-bottom: 2px solid #4a6491; text-align: center; text-transform: uppercase; font-size: 0.8em; margin-top: 8px; margin-bottom: 4px; text-shadow: 1px 1px 2px black;">✨ Magie</div>`;
             
             sorts.forEach(sort => {
                 innerHTML += `
-                    <div class="control-icon brigandyne-action" data-type="spell" data-id="${sort.id}" title="${sort.name}" style="width: 100%; display: flex; align-items: center; justify-content: flex-start; padding: 2px 5px; border-radius: 5px; background: rgba(0,0,0,0.7); border: 1px solid #444; margin: 0; box-sizing: border-box; cursor: pointer; transition: background 0.2s;">
+                    <div class="control-icon brigandyne-action" data-type="spell" data-id="${sort.id}" title="${sort.name}" style="display: flex; align-items: center; justify-content: flex-start; padding: 4px 10px 4px 5px; border-radius: 5px; background: rgba(0,0,0,0.7); border: 1px solid #444; margin: 0; box-sizing: border-box; cursor: pointer; transition: background 0.2s;">
                         <img src="${sort.img}" style="width: 24px; height: 24px; border: none; margin-right: 8px; border-radius: 3px;">
-                        <span style="color: white; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Georgia', serif;">${sort.name}</span>
+                        <span style="color: white; font-size: 0.9em; white-space: nowrap; font-family: 'Georgia', serif;">${sort.name}</span>
                     </div>
                 `;
             });
@@ -167,32 +170,25 @@ Hooks.once("init", async function() {
 
         actionCol.innerHTML = innerHTML;
 
-        // 5. Ajout des événements de clic et de survol en JavaScript Pur
         const actionButtons = actionCol.querySelectorAll('.brigandyne-action');
         actionButtons.forEach(btn => {
-            
-            // Clic sur l'action
             btn.addEventListener('click', async (ev) => {
                 ev.preventDefault();
+                ev.stopPropagation(); 
                 const type = ev.currentTarget.dataset.type;
                 const itemId = ev.currentTarget.dataset.id;
                 
                 if (type === "weapon") await actor.rollWeapon(itemId);
                 if (type === "spell") await actor.rollSpell(itemId);
                 
-                hud.clear(); // Ferme le HUD
+                if (hud.clear) hud.clear();
+                else if (hud.close) hud.close(); 
             });
 
-            // Effet de survol (Hover)
-            btn.addEventListener('mouseenter', () => {
-                btn.style.background = "rgba(139, 0, 0, 0.8)";
-            });
-            btn.addEventListener('mouseleave', () => {
-                btn.style.background = "rgba(0, 0, 0, 0.7)";
-            });
+            btn.addEventListener('mouseenter', () => btn.style.background = "rgba(139, 0, 0, 0.8)");
+            btn.addEventListener('mouseleave', () => btn.style.background = "rgba(0, 0, 0, 0.7)");
         });
 
-        // 6. Injection dans l'élément natif du HUD (compatible V13)
-        htmlElement.appendChild(actionCol);
+        targetHud.appendChild(actionCol);
     });
 });
