@@ -24,7 +24,6 @@ const ActivitySchema = new SchemaField({
             stat: new StringField({ initial: "" }),
             mod: new NumberField({ initial: 0, integer: true })
         }),
-        // 🔥 Le champ crucial pour que les Buffs s'enregistrent correctement
         buff: new SchemaField({
             stat: new StringField({ initial: "" }),
             valeur: new NumberField({ initial: 0, integer: true })
@@ -191,4 +190,5 @@ export class CarriereData extends foundry.abstract.TypeDataModel {
             description: new HTMLField() 
         }; 
     }
+
 }
