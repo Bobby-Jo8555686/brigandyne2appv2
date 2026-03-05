@@ -1,0 +1,185 @@
+<div class="flex-row gap-20 align-stretch mb-15">
+    
+    <div class="item-section flex-1 m-0">
+        <div class="section-header" style="border-top-color: #4a6491;">
+            <i class="fas fa-brain"></i> Capacité Magique
+        </div>
+        <div class="flex-col gap-10 mt-10">
+            <div>
+                <label class="font-bold text-muted">Caractéristique d'Incantation :</label>
+                <select name="system.stat_magie_defaut" class="w-100 mt-5">
+                    {{selectOptions choixStatMagie selected=system.stat_magie_defaut}}
+                </select>
+            </div>
+            <div class="text-right">
+                <button type="button" class="btn-action btn-blue" data-action="resetMagic" title="Remettre à zéro les compteurs de magie après 8h de repos">
+                    <i class="fas fa-bed"></i> Repos du Mage
+                </button>
+            </div>
+            <div class="flex-row justify-between mt-5" style="align-items: flex-start;">
+                <div class="flex-row gap-5" style="align-items: flex-start;">
+                    <span class="magic-labels" style="padding-top: 2px;">Tours:</span>
+                    <div style="display: grid; grid-template-columns: repeat(4, 16px); gap: 4px;">
+                        {{#each toursBoxes}}<a class="spell-box {{#if this.checked}}tours{{else}}empty{{/if}}" data-action="spellUseClick" data-type="tours" data-value="{{this.value}}"></a>{{/each}}
+                    </div>
+                </div>
+                <div class="flex-row gap-5" style="align-items: flex-start;">
+                    <span class="magic-labels" style="padding-top: 2px;">Sorts:</span>
+                    <div style="display: grid; grid-template-columns: repeat(4, 16px); gap: 4px;">
+                        {{#each sortsBoxes}}<a class="spell-box {{#if this.checked}}sorts{{else}}empty{{/if}}" data-action="spellUseClick" data-type="sorts" data-value="{{this.value}}"></a>{{/each}}
+                    </div>
+                </div>
+                <div class="flex-row gap-5" style="align-items: flex-start;">
+                    <span class="magic-labels" style="padding-top: 2px;">Rituel:</span>
+                    <div style="display: grid; grid-template-columns: repeat(4, 16px); gap: 4px;">
+                        <a class="spell-box {{#if rituelBox.checked}}rituels{{else}}empty{{/if}}" data-action="spellUseClick" data-type="rituels" data-value="1"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="item-section flex-1 m-0">
+        <div class="section-header" style="border-top-color: #8e44ad;">
+            <i class="fas fa-hat-wizard"></i> Domaines Magiques
+            <div class="flex-1 text-right"><a class="item-control font-08" data-action="createItem" data-type="domaine"><i class="fas fa-plus"></i></a></div>
+        </div>
+        <div class="item-list mt-5">
+            {{#each domaines as |domaine id|}}
+            <div class="item" data-item-id="{{domaine._id}}">
+                <div class="item-entry-card">
+                    <div class="flex-row align-center gap-10 flex-2">
+                        <img class="item-icon" src="{{domaine.img}}"/>
+                        <h4 class="item-label cursor-pointer m-0" data-action="toggleSummary">{{domaine.name}}</h4>
+                    </div>
+                    <div class="item-controls flex-row gap-5 justify-end">
+                        <a class="item-control" data-action="editItem"><i class="fas fa-edit"></i></a>
+                        <a class="delete-btn" data-action="deleteItem"><i class="fas fa-trash"></i></a>
+                    </div>
+                </div>
+                <div class="item-summary mt-5">
+                    {{{domaine.system.description}}}
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+</div>
+
+<div class="flex-row gap-20 align-stretch">
+    
+    <div class="item-section flex-1 m-0">
+        <div class="section-header" style="border-top-color: #85c1e9;">
+            <i class="fas fa-sparkles"></i> Tours de magie
+            <div class="flex-1 text-right"><a class="item-control font-08" data-action="createItem" data-type="sort"><i class="fas fa-plus"></i></a></div>
+        </div>
+        <div class="item-list flex-col gap-5 mt-5">
+            {{#each sorts as |sort id|}}
+            {{#if (eq sort.system.type_sort "tour")}}
+            <div class="item" data-item-id="{{sort._id}}">
+                <div class="item-entry-card">
+                    <div class="flex-row align-center gap-10 flex-2">
+                        <img class="item-icon cursor-pointer" data-action="rollSpell" src="{{sort.img}}" title="Incanter"/>
+                        <div class="flex-row align-center gap-5">
+                            <h4 class="item-label cursor-pointer m-0" data-action="toggleSummary">{{sort.name}}</h4>
+                            {{#if sort.uses}}
+                            <div class="flex-row align-center gap-3 font-08" style="background:rgba(0,0,0,0.5); padding:2px 5px; border-radius:3px; border:1px solid #555;">
+                                <input type="number" class="use-input" data-item-id="{{sort._id}}" data-act-id="{{sort.primaryActivityId}}" value="{{sort.uses.value}}" style="width:20px; height:16px; padding:0; text-align:center; background:transparent; border:none; color:#fff;" min="0" max="{{sort.uses.max}}">
+                                <span class="color-light">/ {{sort.uses.max}}</span>
+                            </div>
+                            {{/if}}
+                        </div>
+                    </div>
+                    <div class="item-controls flex-row gap-5 justify-end">
+                        <a class="item-control" data-action="editItem"><i class="fas fa-edit"></i></a>
+                        <a class="delete-btn" data-action="deleteItem"><i class="fas fa-trash"></i></a>
+                    </div>
+                </div>
+                <div class="item-summary mt-5">
+                    <div class="font-09 text-muted mb-5">Portée: {{sort.system.portee}} | Durée: {{sort.system.duree}} | Résistance: {{sort.system.resistance}}</div>
+                    {{{sort.system.description}}}
+                </div>
+            </div>
+            {{/if}}
+            {{/each}}
+        </div>
+    </div>
+
+    <div class="item-section flex-1 m-0">
+        <div class="section-header" style="border-top-color: #4a6491;">
+            <i class="fas fa-book-dead"></i> Sortilèges & Rituels
+            <div class="flex-1 text-right"><a class="item-control font-08" data-action="createItem" data-type="sort"><i class="fas fa-plus"></i></a></div>
+        </div>
+        <div class="item-list flex-col gap-5 mt-5">
+            {{#each sorts as |sort id|}}
+            
+            {{#if (eq sort.system.type_sort "sortilege")}}
+            <div class="item" data-item-id="{{sort._id}}">
+                <div class="item-entry-card">
+                    <div class="flex-row align-center gap-10 flex-2">
+                        <img class="item-icon cursor-pointer" data-action="rollSpell" src="{{sort.img}}" title="Incanter"/>
+                        <div class="flex-col">
+                            <div class="flex-row align-center gap-5">
+                                <h4 class="item-label cursor-pointer m-0" data-action="toggleSummary">{{sort.name}}</h4>
+                                {{#if sort.uses}}
+                                <div class="flex-row align-center gap-3 font-08" style="background:rgba(0,0,0,0.5); padding:2px 5px; border-radius:3px; border:1px solid #555;">
+                                    <input type="number" class="use-input" data-item-id="{{sort._id}}" data-act-id="{{sort.primaryActivityId}}" value="{{sort.uses.value}}" style="width:20px; height:16px; padding:0; text-align:center; background:transparent; border:none; color:#fff;" min="0" max="{{sort.uses.max}}">
+                                    <span class="color-light">/ {{sort.uses.max}}</span>
+                                </div>
+                                {{/if}}
+                            </div>
+                            <span class="text-highlight text-muted font-08" style="text-transform: uppercase;">{{sort.system.type_sort}} {{#if sort.system.domaine}}({{sort.system.domaine}}){{/if}}</span>
+                        </div>
+                    </div>
+                    <div class="font-09 font-bold text-center flex-1">{{#if sort.system.difficulte}}Diff: {{sort.system.difficulte}}{{/if}}</div>
+                    <div class="item-controls flex-row gap-5 justify-end">
+                        <a class="item-control" data-action="editItem"><i class="fas fa-edit"></i></a>
+                        <a class="delete-btn" data-action="deleteItem"><i class="fas fa-trash"></i></a>
+                    </div>
+                </div>
+                <div class="item-summary mt-5">
+                    <div class="font-09 text-muted mb-5">Portée: {{sort.system.portee}} | Durée: {{sort.system.duree}} | Résistance: {{sort.system.resistance}}</div>
+                    {{#if sort.system.formule}}<div class="mb-5 color-blue font-georgia" style="font-style:italic;">"{{sort.system.formule}}"</div>{{/if}}
+                    {{#if sort.system.r_plus}}<div class="mb-5 color-gold"><strong>R+ :</strong> {{sort.system.r_plus}}</div>{{/if}}
+                    {{{sort.system.description}}}
+                </div>
+            </div>
+            {{/if}}
+            
+            {{#if (eq sort.system.type_sort "rituel")}}
+            <div class="item" data-item-id="{{sort._id}}">
+                <div class="item-entry-card">
+                    <div class="flex-row align-center gap-10 flex-2">
+                        <img class="item-icon cursor-pointer" data-action="rollSpell" src="{{sort.img}}" title="Incanter"/>
+                        <div class="flex-col">
+                            <div class="flex-row align-center gap-5">
+                                <h4 class="item-label cursor-pointer m-0" data-action="toggleSummary">{{sort.name}}</h4>
+                                {{#if sort.uses}}
+                                <div class="flex-row align-center gap-3 font-08" style="background:rgba(0,0,0,0.5); padding:2px 5px; border-radius:3px; border:1px solid #555;">
+                                    <input type="number" class="use-input" data-item-id="{{sort._id}}" data-act-id="{{sort.primaryActivityId}}" value="{{sort.uses.value}}" style="width:20px; height:16px; padding:0; text-align:center; background:transparent; border:none; color:#fff;" min="0" max="{{sort.uses.max}}">
+                                    <span class="color-light">/ {{sort.uses.max}}</span>
+                                </div>
+                                {{/if}}
+                            </div>
+                            <span class="text-highlight text-muted font-08" style="text-transform: uppercase;">{{sort.system.type_sort}} {{#if sort.system.domaine}}({{sort.system.domaine}}){{/if}}</span>
+                        </div>
+                    </div>
+                    <div class="font-09 font-bold text-center flex-1">{{#if sort.system.difficulte}}Diff: {{sort.system.difficulte}}{{/if}}</div>
+                    <div class="item-controls flex-row gap-5 justify-end">
+                        <a class="item-control" data-action="editItem"><i class="fas fa-edit"></i></a>
+                        <a class="delete-btn" data-action="deleteItem"><i class="fas fa-trash"></i></a>
+                    </div>
+                </div>
+                <div class="item-summary mt-5">
+                    <div class="font-09 text-muted mb-5">Portée: {{sort.system.portee}} | Durée: {{sort.system.duree}} | Résistance: {{sort.system.resistance}}</div>
+                    {{#if sort.system.formule}}<div class="mb-5 color-blue font-georgia" style="font-style:italic;">"{{sort.system.formule}}"</div>{{/if}}
+                    {{#if sort.system.r_plus}}<div class="mb-5 color-gold"><strong>R+ :</strong> {{sort.system.r_plus}}</div>{{/if}}
+                    {{{sort.system.description}}}
+                </div>
+            </div>
+            {{/if}}
+            
+            {{/each}}
+        </div>
+    </div>
+</div>

@@ -1,0 +1,43 @@
+<div class="tab details" data-tab="details" style="display:block;">
+    <div class="item-grid">
+        <div class="form-group-item">
+            <label>Type d'incantation</label>
+            <select name="system.type_sort">
+                {{selectOptions choixTypeSort selected=system.type_sort}}
+            </select>
+        </div>
+        <div class="form-group-item">
+            <label>Domaine / Source</label>
+            <input type="text" name="system.domaine" value="{{system.domaine}}" placeholder="Ex: Nécromancie..."/>
+        </div>
+
+        {{#if isNotTour}}
+        <div class="form-group-item">
+            <label>Difficulté (Mod.)</label>
+            <input type="number" name="system.difficulte" value="{{system.difficulte}}"/>
+        </div>
+        <div class="form-group-item">
+            <label>Portée</label>
+            <select name="system.portee">
+                {{selectOptions choixPortee selected=system.portee}}
+            </select>
+        </div>
+        <div class="form-group-item">
+            <label>Durée</label>
+            <input type="text" name="system.duree" value="{{system.duree}}"/>
+        </div>
+        <div class="form-group-item">
+            <label>Résistance</label>
+            <input type="text" name="system.resistance" value="{{system.resistance}}"/>
+        </div>
+        <div class="form-group-item col">
+            <label>Formule magique (+5)</label>
+            <input type="text" name="system.formule" value="{{system.formule}}" placeholder="Phrase prononcée..."/>
+        </div>
+        <div class="form-group-item col">
+            <label>Effet R+ (Critique)</label>
+            <input type="text" name="system.r_plus" value="{{system.r_plus}}"/>
+        </div>
+        {{/if}}
+    </div>
+</div>
