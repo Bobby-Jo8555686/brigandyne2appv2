@@ -1,0 +1,509 @@
+/* ==========================================
+   STYLE GLOBAL "DARK FANTASY"
+========================================== */
+.sheet.brigandyne2appv2 .window-content {
+    background-image: url(../assets/ui/fond-metal.webp) !important; 
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.sheet.brigandyne2appv2 form { background: transparent !important; }
+
+.brigandyne2appv2.sheet { 
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif; 
+    color: #e0e0e0; 
+}
+
+.main-title {
+    text-align: center; font-family: "Georgia", serif; font-size: 2em;
+    letter-spacing: 5px; text-transform: uppercase; color: #8b0000;
+    margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+}
+
+/* ==========================================
+   LISIBILITÉ MAXIMALE : TEXTES ET PANNEAUX
+========================================== */
+/* Texte clair et ombre noire tranchante pour se détacher de tous les fonds */
+.brigandyne2appv2.sheet label,
+.brigandyne2appv2.sheet h3,
+.brigandyne2appv2.sheet h4,
+.brigandyne2appv2.sheet .stat-label,
+.brigandyne2appv2.sheet .item-label,
+.brigandyne2appv2.sheet .item-details-col,
+.brigandyne2appv2.sheet .item-summary,
+.brigandyne2appv2.sheet .bio-label,
+.brigandyne2appv2.sheet p,
+.brigandyne2appv2.sheet span:not(.text-danger):not(.color-gold):not(.color-blue):not(.color-purple):not(.success):not(.fail) {
+    color: #f0f0f0 !important; 
+    text-shadow: 1px 1px 2px #000, 0 0 5px #000 !important; 
+}
+
+/* Panneaux de contraste sombre derrière le contenu principal */
+.brigandyne2appv2.sheet .competences-col,
+.brigandyne2appv2.sheet .item-section,
+.brigandyne2appv2.sheet .editor-container,
+.brigandyne2appv2.sheet .domaine-container {
+    background: rgba(0, 0, 0, 0.65) !important; 
+    border: 1px solid rgba(255, 255, 255, 0.1) !important; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5) !important; 
+    border-radius: 4px;
+    padding: 10px;
+}
+
+/* ==========================================
+   UTILITAIRES DE MISE EN PAGE (FLEXBOX)
+========================================== */
+.flex-row { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-1 { flex: 1; }
+.flex-2 { flex: 2; }
+.gap-3 { gap: 3px; }
+.gap-5 { gap: 5px; }
+.gap-10 { gap: 10px; }
+.gap-20 { gap: 20px; }
+.align-center { align-items: center; }
+.align-stretch { align-items: stretch; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.text-center { text-align: center; }
+.w-100 { width: 100%; }
+.m-0 { margin: 0; }
+.mt-5 { margin-top: 5px; }
+.mt-10 { margin-top: 10px; }
+.mt-15 { margin-top: 15px; }
+.mb-5 { margin-bottom: 5px; }
+.mb-10 { margin-bottom: 10px; }
+.mb-15 { margin-bottom: 15px; }
+.pt-4 { padding-top: 4px; }
+.pt-10 { padding-top: 10px; }
+.px-5 { padding: 0 5px; }
+.min-h-100 { min-height: 100px; }
+.cursor-pointer { cursor: pointer; }
+
+/* BORDURES & COULEURS DE TEXTE */
+.border-top { border-top: 1px solid #444; }
+.border-bottom-purple { border-bottom: 1px solid #8e44ad; }
+.border-bottom-blue { border-bottom: 1px solid #4a6491; }
+.color-purple { color: #8e44ad !important; }
+.color-blue { color: #85c1e9 !important; }
+.color-gold { color: #d4af37 !important; }
+.color-light { color: #e0e0e0 !important; }
+.font-bold { font-weight: bold; }
+.font-georgia { font-family: 'Georgia', serif; }
+.font-08 { font-size: 0.8em; }
+.font-085 { font-size: 0.85em; }
+.font-09 { font-size: 0.9em; }
+.font-095 { font-size: 0.95em; }
+.text-muted { color: #aaa; font-size: 0.85em; }
+.text-highlight { color: #85c1e9; font-weight: bold; }
+.text-danger { color: #ff5252 !important; font-weight: bold; }
+
+/* ==========================================
+   INPUTS ET ZONES DE SAISIE
+========================================== */
+.brigandyne2appv2.sheet input[type="text"],
+.brigandyne2appv2.sheet input[type="number"],
+.brigandyne2appv2.sheet select,
+.brigandyne2appv2.sheet textarea,
+.brigandyne2appv2.sheet .search-list {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid #444; border-radius: 2px;
+    color: #fff !important; font-family: inherit; padding: 4px;
+    text-shadow: none !important; /* Pas de halo DANS un champ de texte */
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
+}
+
+.brigandyne2appv2.sheet textarea {
+    width: 100%; resize: none; overflow-y: hidden; line-height: 1.4;
+    margin-top: 5px;
+}
+
+.brigandyne2appv2.sheet input:focus, 
+.brigandyne2appv2.sheet select:focus, 
+.brigandyne2appv2.sheet textarea:focus {
+    border-color: #9e0b0f !important; background: rgba(0, 0, 0, 0.7) !important; outline: none;
+}
+
+.brigandyne2appv2.sheet select option { background-color: #1a1a1a !important; color: #e0e0e0 !important; }
+
+/* ==========================================
+   EN-TÊTE DE L'ACTEUR
+========================================== */
+.sheet-header-actor { display: flex; align-items: flex-start; gap: 20px; margin-bottom: 15px; }
+.item-header-main { border-bottom: 2px solid #555; padding-bottom: 10px; margin-bottom: 20px; }
+.actor-profile-img { flex: 0 0 160px; height: 250px; object-fit: cover; border: 2px solid #111; border-radius: 5px; background: #000; box-shadow: 0 0 10px rgba(0,0,0,0.8); }
+.item-header-img { flex: 0 0 64px; width: 64px; height: 64px; border: 1px solid #111; border-radius: 5px; background: #000; }
+
+.header-bio { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.bio-line { display: flex; align-items: center; }
+
+.bio-label { 
+    flex: 0 0 120px; font-weight: bold; 
+    font-size: 1.25em !important; 
+}
+
+/* Champs auto-calculés dans l'en-tête */
+.brigandyne2appv2.sheet .bio-input-readonly {
+    flex: 1;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-bottom: 1px dashed #555 !important;
+    color: #d4af37 !important; /* Doré */
+    font-weight: bold;
+    padding: 4px;
+}
+
+/* ==========================================
+   RESSOURCES VITALES
+========================================== */
+.header-resources { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; border-top: 1px solid #333; padding-top: 10px; }
+.resource-box { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 5px 10px; background: rgba(0,0,0,0.7); border: 1px solid #444; border-radius: 4px; white-space: nowrap; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
+.resource-box label { font-weight: bold; text-transform: uppercase; font-size: 0.9em; text-shadow: none !important; }
+
+/* Masquer les flèches des champs numériques (Standardisé) */
+.resource-box input[type="number"]::-webkit-inner-spin-button,
+.resource-box input[type="number"]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    appearance: none;
+    margin: 0; 
+}
+.resource-box input[type="number"] { 
+    appearance: textfield; /* Standard moderne */
+    width: 25px; 
+    text-align: right; 
+    font-size: 1.2em; 
+    font-weight: bold; 
+    background: transparent !important; 
+    box-shadow: none !important; 
+    border: none; 
+    padding: 0; 
+    color: #fff !important; 
+}
+
+.resource-box span { font-size: 1.2em; color: #aaa !important; font-weight: bold; margin-left: 2px; }
+
+.resource-box.vit { border-color: #8b0000; } .resource-box.vit label { color: #ffcccc !important; }
+.resource-box.sf { border-color: #1a5b1a; } .resource-box.sf label { color: #a5d6a7 !important; }
+.resource-box.des { border-color: #d4af37; } .resource-box.des label { color: #fff59d !important; }
+.resource-box.px { border-color: #4a6491; } .resource-box.px label { color: #85c1e9 !important; }
+.resource-box.px input { width: 45px; text-align: center; }
+
+.header-stats { flex: 0 0 140px; display: flex; flex-direction: column; gap: 10px; }
+.combat-box { text-align: center; border-radius: 4px; padding: 10px 5px; background: rgba(0,0,0,0.7); box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
+.combat-box label { display: block; font-size: 0.9em; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; color: #ccc !important; text-shadow: none !important;}
+.combat-box span { display: block; font-size: 2.2em; font-weight: bold; color: #fff !important; text-shadow: 0 0 5px #000 !important; }
+.combat-box.init { border: 1px solid #8b0000; }
+.combat-box.prot { border: 1px solid #555; }
+.malus-armure { text-align: center; margin-top: 5px; font-size: 0.9em; color: #aaa; }
+
+.roll-init { cursor: pointer; transition: 0.2s; }
+.roll-init:hover { color: #fff !important; text-shadow: 0 0 8px #ff5252 !important; }
+
+/* ==========================================
+   ONGLETS
+========================================== */
+.sheet-tabs { display: flex; border-bottom: 2px solid #555; margin: 15px 0; padding: 0; }
+.sheet-tabs .item { padding: 8px 15px; font-weight: bold; text-transform: uppercase; color: #aaa !important; text-shadow: none !important; cursor: pointer; transition: 0.2s; background: rgba(0,0,0,0.6); border-top-left-radius: 5px; border-top-right-radius: 5px; margin-right: 2px; border: 1px solid #333; border-bottom: none;}
+.sheet-tabs .item:hover { background: rgba(0,0,0,0.8); color: #fff !important; }
+.sheet-tabs .item.active { border-bottom: 2px solid #8b0000; background: rgba(0,0,0,0.9); color: #fff !important; border-color: #555; }
+
+/* ==========================================
+   CARACTÉRISTIQUES (STATS) ET TITRES UNIFIÉS
+========================================== */
+.stats-container { display: flex; gap: 20px; align-items: flex-start; }
+
+.comp-header, .item-title { 
+    display: flex; margin: 0 0 10px 0;
+    font-weight: bold; font-family: 'Georgia', serif; 
+    font-size: 1em !important; 
+    text-transform: uppercase; 
+}
+.comp-header { border-bottom: 2px solid #555; padding-bottom: 5px; }
+
+.stat-row { display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 3px; margin-bottom: 4px; }
+.stat-label { flex: 2; cursor: pointer; font-size: 1.05em; font-weight: bold; }
+.stat-label:hover { color: #e74c3c !important; text-shadow: 0 0 5px rgba(231,76,60,0.8) !important; }
+.stat-base { flex: 0 0 35px; text-align: center; }
+.stat-base input { width: 100%; height: 22px; text-align: center; }
+.stat-prog { flex: 0 0 80px; text-align: center; }
+
+.prog-box { display: inline-block; width: 12px; height: 12px; border: 1px solid #777; cursor: pointer; transition: 0.2s; background: rgba(0,0,0,0.8); border-radius: 2px; }
+.prog-box.checked { background: #8b0000; border-color: #ff5252; box-shadow: 0 0 5px rgba(139,0,0,0.8); }
+.prog-box.locked { border-color: #333; opacity: 0.5; background: repeating-linear-gradient(45deg, #111, #111 2px, #333 2px, #333 4px); cursor: not-allowed; }
+.prog-box:hover:not(.locked) { border-color: #fff; transform: scale(1.2); }
+
+.stat-actual { flex: 0 0 45px; display: flex; justify-content: flex-end; }
+.actual-box { width: 35px; height: 26px; line-height: 26px; text-align: center; background: #8b0000; color: #fff; font-weight: bold; font-size: 1.1em; border: 1px solid #ff5252; border-radius: 3px; text-shadow: none; box-shadow: inset 0 0 5px rgba(0,0,0,0.5);}
+
+.handicaps-box { margin-top: 15px; border-top: 2px solid #8b0000; padding-top: 10px; }
+.handicaps-title { margin: 0 0 10px 0; font-family: 'Georgia', serif; font-size: 1em; text-transform: uppercase; }
+.handicaps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 0.85em; }
+.handicap-label { cursor: pointer; display: flex; align-items: center; gap: 5px; }
+
+.ignore-handicap-btn { display: inline-block; background: #8b0000; color: #fff !important; padding: 5px 10px; border-radius: 3px; font-size: 0.8em; font-weight: bold; cursor: pointer; border: 1px solid #ff5252; margin-top: 10px; text-shadow: none !important;}
+.ignore-handicap-btn:hover { background: #e74c3c; }
+
+/* ==========================================
+   LISTES (Items, Armes, Sorts, etc.)
+========================================== */
+.right-col { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+.item-header { display: flex; justify-content: space-between; border-bottom: 2px solid #8b0000; margin-bottom: 10px; padding-bottom: 5px; }
+.item-header.gold { border-color: #d4af37; } .item-header.blue { border-color: #4a6491; }
+.item-header.green { border-color: #1a5b1a; } .item-header.purple { border-color: #8e44ad; }
+.item-header.grey { border-color: #555; }
+
+.item-title.colored-blue { color: #85c1e9 !important; } .item-title.colored-gold { color: #d4af37 !important; }
+.item-title.colored-green { color: #1a5b1a !important; }
+
+.item-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.item-entry { display: flex; align-items: center; padding: 5px 0; border-bottom: 1px dashed rgba(255,255,255,0.2); gap: 10px;}
+.item-entry.no-border { border-bottom: none; padding: 2px 0; }
+
+.item-name-col { flex: 2; display: flex; align-items: center; }
+.item-image { width: 28px; height: 28px; margin-right: 8px; border-radius: 3px; border: 1px solid #444; }
+.item-image.large { width: 48px; height: 48px; } .item-image.small { width: 24px; height: 24px; }
+.item-image.rollable, .item-image.cursor-pointer { cursor: pointer; transition: 0.2s; }
+.item-image.rollable:hover, .item-image.cursor-pointer:hover { border-color: #e74c3c; transform: scale(1.1); box-shadow: 0 0 5px rgba(231,76,60,0.8); }
+.border-dark { border: 1px solid #000; }
+
+.item-label { 
+    margin: 0; 
+    font-weight: bold; 
+    font-size: 1.2em !important; /* Taille réduite pour mieux s'intégrer */
+    cursor: pointer; 
+}
+.item-details-col { flex: 1; text-align: center; font-size: 0.9em; }
+
+.item-controls { flex: 0 0 50px; text-align: right; display: flex; gap: 8px; justify-content: flex-end; }
+.item-control { color: #aaa !important; cursor: pointer; font-size: 1.1em; text-shadow: none !important;}
+.item-control:hover { color: #fff !important; } .item-control.item-delete:hover { color: #ff5252 !important; }
+
+.item-summary { display: none; padding: 5px 10px; font-size: 0.85em; border-left: 2px solid #555; background: rgba(0,0,0,0.3); margin-top: 5px; }
+.magic-item-bg { background: rgba(0,0,0,0.4); padding: 5px; border: 1px solid #444; border-radius: 3px; }
+
+/* ==========================================
+   MAGIE
+========================================== */
+.magic-labels { width: 60px; font-weight: bold; }
+.spell-box { display: inline-block; width: 16px; height: 16px; border: 1px solid #777; cursor: pointer; transition: 0.2s; }
+.spell-box:hover { border-color: #fff; transform: scale(1.1); }
+.spell-box.empty { background: rgba(0, 0, 0, 0.5); }
+.spell-box.tours { background: #4a6491; box-shadow: 0 0 5px rgba(74,100,145,0.8); }
+.spell-box.sorts { background: #d32f2f; box-shadow: 0 0 5px rgba(211,47,47,0.8); }
+.spell-box.rituels { background: #1a5b1a; box-shadow: 0 0 5px rgba(26,91,26,0.8); }
+
+/* ==========================================
+   BIOGRAPHIE & HISTORIQUE ET EDITEUR 
+========================================== */
+.history-row { display: flex; gap: 20px; margin-bottom: 20px; }
+.history-col { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+
+.editor-container .editor { flex: 1; display: flex; flex-direction: column; min-height: 230px; }
+.editor-container .editor-content { flex: 1; min-height: 230px; padding: 5px; overflow-y: auto; }
+.editor-container .editor-edit { right: 0; top: -5px; background: #111; border: 1px solid #444; color: #fff; padding: 5px; border-radius: 3px; }
+
+.empty-slot { text-align: center; color: #777; font-style: italic; padding: 10px; text-shadow: none !important; }
+
+/* ==========================================
+   GRILLES DES ITEMS (Item Sheet)
+========================================== */
+.item-grid { display: flex; flex-direction: column; gap: 10px; }
+.form-group-item { display: flex; justify-content: space-between; align-items: center; }
+.form-group-item label { font-weight: bold; }
+.form-group-item select, .form-group-item input { width: 50%; }
+.form-group-item.col { flex-direction: column; align-items: flex-start; }
+.form-group-item.col select, .form-group-item.col input { width: 100%; margin-top: 5px; }
+
+.stats-modifiers-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.stat-mod { display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.5); border: 1px solid #444; padding: 5px; border-radius: 4px; }
+.stat-mod label { font-size: 0.8em; text-transform: uppercase; }
+.stat-mod input { text-align: center; font-size: 1.2em; font-weight: bold; width: 100%; }
+
+/* ==========================================
+   PERSONNALISATION DE L'INTERFACE FOUNDRY
+========================================== */
+body.vtt {
+    background-image: url(../assets/ui/background2.webp) !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-color: #000 !important;
+    height: 100vh !important; 
+    background-attachment: fixed !important;
+}
+
+#logo { content: url(../assets/ui/brigandyne-logo.webp) !important; height: 50px !important; margin-top: 5px; }
+#pause img { content: url(../assets/ui/pause.webp) !important; }
+#pause figcaption { font-family: "Georgia", "Palatino Linotype", serif !important; color: #8b0000 !important; text-shadow: 0 0 5px #000 !important; font-weight: bold !important; font-size: 2em !important; }
+
+/* ==========================================
+   CHAT CARDS (JETS DE DÉS ET COMBAT)
+========================================== */
+.brigandyne-roll, .brigandyne2-roll {
+    background: rgba(0, 0, 0, 0.85); border: 1px solid #444; border-radius: 5px; padding: 10px;
+    color: #e0e0e0; font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif; box-shadow: 0 0 10px rgba(0,0,0,0.8);
+}
+.brigandyne-roll h3, .brigandyne2-roll h3 {
+    border-bottom: 1px solid #555; padding-bottom: 5px; margin-bottom: 10px; color: #fff; font-family: 'Georgia', serif;
+    text-transform: uppercase; font-size: 1.1em; text-align: center;
+}
+.brigandyne-roll .dice-result, .brigandyne2-roll .dice-result { margin: 10px 0; text-align: center; }
+.brigandyne-roll .dice-total, .brigandyne2-roll .dice-total {
+    display: inline-block; font-size: 2.2em; font-weight: bold; padding: 5px 20px;
+    border-radius: 5px; text-shadow: 1px 1px 3px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+}
+.brigandyne-roll .roll-result, .brigandyne2-roll .roll-result {
+    font-size: 1.2em; margin-top: 5px; padding: 3px; border-radius: 3px; text-shadow: 1px 1px 2px #000;
+}
+.brigandyne-roll .success, .brigandyne2-roll .success { color: #a5d6a7; border: 1px solid #1a5b1a; background: rgba(26, 91, 26, 0.5); }
+.brigandyne-roll .major-success, .brigandyne2-roll .major-success { color: #81c784; border: 1px solid #2e7d32; background: rgba(46, 125, 50, 0.7); }
+.brigandyne-roll .crit-success, .brigandyne2-roll .crit-success { color: #d4af37; border: 1px solid #b8860b; background: rgba(184, 134, 11, 0.5); text-shadow: 0 0 8px #d4af37; }
+.brigandyne-roll .fail, .brigandyne2-roll .fail { color: #ffcccc; border: 1px solid #8b0000; background: rgba(139, 0, 0, 0.5); }
+.brigandyne-roll .major-fail, .brigandyne2-roll .major-fail { color: #ff5252; border: 1px solid #b71c1c; background: rgba(183, 28, 28, 0.7); }
+.brigandyne-roll .crit-fail, .brigandyne2-roll .crit-fail { color: #fff; border: 1px solid #ff0000; background: rgba(255, 0, 0, 0.8); text-shadow: 0 0 8px #ff0000; }
+.brigandyne-roll .weapon-damage, .brigandyne2-roll .weapon-damage {
+    margin-top: 10px; padding: 8px; border-radius: 4px; text-align: center; background: rgba(0,0,0,0.6); border: 1px solid #555;
+}
+.brigandyne-roll .weapon-damage.success-box, .brigandyne2-roll .weapon-damage.success-box { border-color: #1a5b1a; }
+.brigandyne-roll .weapon-damage.crit-box, .brigandyne2-roll .weapon-damage.crit-box { border-color: #d4af37; box-shadow: inset 0 0 8px rgba(212, 175, 55, 0.3); }
+.brigandyne-roll .weapon-damage.counter-attack-box, .brigandyne2-roll .weapon-damage.counter-attack-box { border-color: #ff5252; background: rgba(139, 0, 0, 0.3); }
+/* ========================================== */
+/* VERROUILLAGE DE LA FICHE                   */
+/* ========================================== */
+
+/* On bloque tous les champs de texte et listes déroulantes SAUF la vie, le SF et le destin */
+.brigandyne2appv2.actor.locked input:not([name="system.vitalite.value"]):not([name="system.sangfroid.value"]):not([name="system.destin.value"]),
+.brigandyne2appv2.actor.locked select {
+    pointer-events: none;
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    appearance: none;
+}
+
+/* On cache les boutons pour supprimer ou ajouter des objets */
+.brigandyne2appv2.actor.locked [data-action="createItem"],
+.brigandyne2appv2.actor.locked [data-action="deleteItem"] {
+    display: none !important;
+}
+
+/* Style du cadenas */
+.lock-btn {
+    cursor: pointer;
+    font-size: 1.2em;
+    margin-left: 10px;
+    transition: transform 0.2s;
+}
+
+.lock-btn:hover {
+    transform: scale(1.2);
+}
+/* ==========================================
+   BOUTONS & ACTIONS RAPIDES
+========================================== */
+.brigandyne2appv2 .btn-action {
+    display: inline-block;
+    color: #fff !important;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: 'Georgia', serif;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    text-shadow: 1px 1px 2px #000;
+    transition: filter 0.2s ease, transform 0.1s ease;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.brigandyne2appv2 .btn-action:hover { filter: brightness(1.2); transform: scale(1.02); color: #fff !important; }
+.brigandyne2appv2 .btn-blue { background: #4a6491; }
+.brigandyne2appv2 .btn-green { background: #1a5b1a; padding: 6px 12px; font-size: 0.9em; }
+
+/* ==========================================
+   LISTES ET EN-TÊTES UNIFIÉS
+========================================== */
+.brigandyne2appv2 .section-header {
+    background: #111;
+    border-top: 3px solid #8b0000;
+    padding: 4px 8px;
+    margin-bottom: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    color: #fff;
+    font-size: 1.05em;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-shadow: 1px 1px 2px black;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.brigandyne2appv2 .empty-list {
+    text-align: center; color: #777; font-style: italic; padding: 10px; 
+    background: rgba(0, 0, 0, 0.2); border: 1px dashed #333; border-radius: 3px;
+    text-shadow: none !important;
+}
+.brigandyne2appv2 .item-entry-card {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(0, 0, 0, 0.4); border-bottom: 1px solid #333;
+    padding: 6px; margin-bottom: 2px; border-radius: 3px;
+    transition: background 0.2s ease;
+}
+.brigandyne2appv2 .item-entry-card:hover { background: rgba(0, 0, 0, 0.6); }
+.brigandyne2appv2 .item-icon {
+    width: 28px; height: 28px; border: 1px solid #000; 
+    border-radius: 3px; box-shadow: 1px 1px 3px rgba(0,0,0,0.8); object-fit: cover;
+}
+.brigandyne2appv2 .delete-btn { color: #888; cursor: pointer; padding: 5px; transition: color 0.2s ease; text-shadow: none !important;}
+.brigandyne2appv2 .delete-btn:hover { color: #ff5252; }
+
+/* ==========================================
+   BOÎTES SÉMANTIQUES (Fonds colorés)
+========================================== */
+.brigandyne2appv2 .box-resource { background: rgba(0,0,0,0.3); padding: 5px; border-radius: 3px; border: 1px solid #444; }
+.brigandyne2appv2 .box-green { background: rgba(76, 175, 80, 0.1); padding: 8px; border: 1px dashed #4CAF50; border-radius: 4px; }
+.brigandyne2appv2 .box-blue { background: rgba(74, 100, 145, 0.1); padding: 8px; border: 1px dashed #4a6491; border-radius: 4px; }
+.brigandyne2appv2 .box-gold { background: rgba(212, 175, 55, 0.1); padding: 8px; border-left: 3px solid #d4af37; font-family: 'Georgia', serif; }
+.brigandyne2appv2 .box-orange { background: rgba(255, 152, 0, 0.1); padding: 8px; border: 1px dashed #ff9800; border-radius: 4px; }
+
+/* Textes colorés associés */
+.brigandyne2appv2 .title-green { color: #4CAF50 !important; font-weight: bold; }
+.brigandyne2appv2 .title-blue { color: #85c1e9 !important; font-weight: bold; }
+.brigandyne2appv2 .title-orange { color: #ffb74d !important; font-weight: bold; }
+
+/* ==========================================
+   VICES ET VERTUS
+========================================== */
+.brigandyne2appv2 .vices-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.brigandyne2appv2 .vice-vertu-row { 
+    display: flex; justify-content: space-between; align-items: center; 
+    background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 4px; border: 1px solid #444; 
+}
+.brigandyne2appv2 .value-badge { background: #111; padding: 2px 6px; border-radius: 3px; color: #fff; border: 1px solid #333; font-weight: bold;}
+.brigandyne2appv2 .text-vice { color: #ff5252 !important; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+.brigandyne2appv2 .text-vertu { color: #4CAF50 !important; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+.brigandyne2appv2 .vice-btn { cursor: pointer; transition: transform 0.1s; }
+.brigandyne2appv2 .vice-btn:hover { transform: scale(1.2); }
+
+/* ==========================================
+   ACTIVITÉS (Item Sheet)
+========================================== */
+.brigandyne2appv2 .activity-block {
+    border: 1px solid #8b0000; padding: 10px; margin-bottom: 15px; 
+    background: rgba(0, 0, 0, 0.4); border-radius: 5px; position: relative;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+}
+.brigandyne2appv2 .activity-header {
+    display: flex; justify-content: space-between; align-items: center; 
+    border-bottom: 1px solid #555; padding-bottom: 5px; margin-bottom: 10px;
+}
+.brigandyne2appv2 .activity-name-input {
+    font-weight: bold !important; font-size: 1.2em !important; border: none !important; 
+    background: transparent !important; color: #ffcccc !important; 
+    font-family: 'Georgia', serif; box-shadow: none !important; padding-left: 0;
+}
+.brigandyne2appv2 .activity-section-title {
+    font-weight: bold; font-size: 0.9em; color: #ffcccc; display: block; margin-bottom: 5px;
+    text-transform: uppercase; font-family: 'Georgia', serif;
+}
