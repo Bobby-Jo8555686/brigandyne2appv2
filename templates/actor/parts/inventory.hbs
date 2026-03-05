@@ -1,0 +1,101 @@
+<div class="flex-row justify-end mb-10" style="padding-right: 5px;">
+    <a data-action="resetActivities" style="background: #4CAF50; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9em; box-shadow: 1px 1px 3px rgba(0,0,0,0.3); font-family: 'Georgia', serif;">
+        <i class="fas fa-campground"></i> Repos / Recharger les capacités
+    </a>
+</div>
+<div class="history-row">
+    <div class="history-col">
+        <div class="item-section">
+            <div class="item-header">
+                <h3 class="item-title"><i class="fas fa-khanda"></i> Armes</h3>
+                <div class="item-controls"><a class="item-control" data-action="createItem" data-type="arme"><i class="fas fa-plus"></i></a></div>
+            </div>
+            <div class="item-list">
+                {{#each armes as |arme id|}}
+                <div class="item" data-item-id="{{arme._id}}">
+                    <div class="item-entry">
+                        <div class="item-name-col">
+                            <img class="item-image cursor-pointer" data-action="rollWeapon" src="{{arme.img}}" title="Attaquer"/>
+                            <h4 class="item-label cursor-pointer" data-action="toggleSummary">{{arme.name}}</h4>
+                        </div>
+                        <div class="item-details-col">DG: {{arme.system.degats_fixe}}</div>
+                        <div class="item-controls">
+                            <a class="item-control" data-action="editItem"><i class="fas fa-edit"></i></a>
+                            <a class="item-control" data-action="deleteItem"><i class="fas fa-trash"></i></a>
+                        </div>
+                    </div>
+                    <div class="item-summary mt-5">
+                        <div class="font-09 text-muted mb-5">Type: {{#if (eq arme.system.type_arme "melee")}}Mêlée{{else}}Distance{{/if}} | Prise: {{arme.system.mains}} main(s)</div>
+                        {{#if arme.system.special}}<div class="color-gold mb-5"><strong>Spécial:</strong> {{arme.system.special}}</div>{{/if}}
+                        {{{arme.system.description}}}
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+
+    <div class="history-col">
+        <div class="item-section">
+            <div class="item-header green">
+                <h3 class="item-title"><i class="fas fa-shield-alt"></i> Armures</h3>
+                <div class="item-controls"><a class="item-control" data-action="createItem" data-type="armure"><i class="fas fa-plus"></i></a></div>
+            </div>
+            <div class="item-list">
+                {{#each armures as |armure id|}}
+                <div class="item" data-item-id="{{armure._id}}">
+                    <div class="item-entry">
+                        <div class="item-name-col">
+                            <img src="{{armure.img}}" class="item-image cursor-pointer" data-action="rollItem" title="Utiliser une capacité d'armure"/>
+                            <h4 class="item-label cursor-pointer" data-action="toggleSummary">{{armure.name}}</h4>
+                        </div>
+                        <div class="item-details-col flex-row gap-10 align-center justify-center">
+                            <label class="cursor-pointer"><input type="checkbox" data-action="toggleEquip" data-item-id="{{armure._id}}" {{checked armure.system.equipe}}/> <i class="fas fa-tshirt"></i></label>
+                            <span>Prot: {{armure.system.protection}}</span>
+                        </div>
+                        <div class="item-controls">
+                            <a class="item-control" data-action="editItem"><i class="fas fa-edit"></i></a>
+                            <a class="item-control" data-action="deleteItem"><i class="fas fa-trash"></i></a>
+                        </div>
+                    </div>
+                    <div class="item-summary mt-5">
+                        <div class="font-09 text-danger mb-5">
+                            {{#if armure.system.malus_init}}Malus Init: {{armure.system.malus_init}}{{/if}}
+                            {{#if armure.system.malus_mou}} | Malus Mouv: {{armure.system.malus_mou}}%{{/if}}
+                        </div>
+                        {{{armure.system.description}}}
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="item-section">
+    <div class="item-header grey">
+        <h3 class="item-title">Équipement Divers</h3>
+        <div class="item-controls"><a class="item-control" data-action="createItem" data-type="objet"><i class="fas fa-plus"></i> Ajouter</a></div>
+    </div>
+    <div class="item-list">
+        {{#each objets as |objet id|}}
+        <div class="item" data-item-id="{{objet._id}}">
+            <div class="item-entry">
+                <div class="item-name-col">
+                    <img class="item-image cursor-pointer" data-action="rollItem" src="{{objet.img}}" title="Utiliser l'objet"/>
+                    <h4 class="item-label cursor-pointer" data-action="toggleSummary">{{objet.name}}</h4>
+                </div>
+                <div class="item-details-col">Qté: {{objet.system.quantite}}</div>
+                <div class="item-controls">
+                    <a class="item-control" data-action="editItem"><i class="fas fa-edit"></i></a>
+                    <a class="item-control" data-action="deleteItem"><i class="fas fa-trash"></i></a>
+                </div>
+            </div>
+            <div class="item-summary mt-5">
+                <div class="font-09 text-muted mb-5">Encombrement: {{objet.system.encombrement}} | Prix: {{objet.system.prix}}</div>
+                {{{objet.system.description}}}
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</div>

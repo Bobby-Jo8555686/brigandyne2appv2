@@ -1,0 +1,109 @@
+<div class="activities-tab" style="padding: 10px;">
+    
+    <div style="text-align: right; margin-bottom: 15px;">
+        <a data-action="addActivity" style="background: #4a6491; color: white; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-weight: bold; box-shadow: 1px 1px 3px rgba(0,0,0,0.3);">
+            <i class="fas fa-plus"></i> Nouvelle Activité
+        </a>
+    </div>
+
+    {{#each system.activities as |act id|}}
+    <div class="activity-block" style="border: 1px solid #8b0000; padding: 10px; margin-bottom: 15px; background: rgba(139, 0, 0, 0.02); border-radius: 5px; position: relative;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">
+            <input type="text" class="act-input" data-index="{{id}}" data-field="nom" value="{{act.nom}}" placeholder="Nom de l'action..." style="font-weight: bold; font-size: 1.1em; border: none; background: transparent; flex: 1; color: #8b0000; font-family: 'Georgia', serif;">
+            <a data-action="deleteActivity" data-id="{{id}}" style="color: #b71c1c; cursor: pointer; padding: 5px;" title="Supprimer cette activité"><i class="fas fa-trash"></i></a>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+            <div>
+                <label style="font-weight: bold; font-size: 0.85em; color: #555;">Type d'action</label>
+                <select class="act-input" data-index="{{id}}" data-field="type" style="width: 100%;">
+                    {{selectOptions ../choixTypeActivite selected=act.type}}
+                </select>
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <div style="flex: 1;">
+                    <label style="font-weight: bold; font-size: 0.85em; color: #555;">Coût</label>
+                    <input type="number" class="act-input" data-index="{{id}}" data-field="cout.valeur" value="{{act.cout.valeur}}" style="width: 100%;">
+                </div>
+                <div style="flex: 2;">
+                    <label style="font-weight: bold; font-size: 0.85em; color: #555;">Ressource</label>
+                    <select class="act-input" data-index="{{id}}" data-field="cout.ressource" style="width: 100%;">
+                        {{selectOptions ../choixRessource selected=act.cout.ressource}}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        {{#if (eq act.type "buff")}}
+            <div class="form-group" style="margin-top: 10px; background: rgba(76, 175, 80, 0.1); padding: 10px; border: 1px dashed #4CAF50; border-radius: 5px;">
+                <label style="font-weight: bold; color: #2E7D32;">Effet du Buff / Débuff</label>
+                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                    <div style="flex: 2;">
+                        <label style="font-size: 0.8em; color: #333;">Caractéristique impactée</label>
+                        <select class="act-input" data-index="{{id}}" data-field="effet.buff.stat" style="width: 100%;">
+                            {{selectOptions ../choixStats selected=act.effet.buff.stat}}
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.8em; color: #333;">Modificateur</label>
+                        <input type="number" class="act-input" data-index="{{id}}" data-field="effet.buff.valeur" value="{{act.effet.buff.valeur}}" style="width: 100%; text-align: center;" placeholder="ex: 10 ou -10">
+                    </div>
+                </div>
+            </div>
+            {{/if}}
+
+        <div style="display: flex; gap: 10px; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 3px; margin-bottom: 10px;">
+            <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
+                <label style="font-weight: bold; font-size: 0.85em; color: #333; white-space: nowrap;">Utilisations :</label>
+                <input type="number" class="act-input" data-index="{{id}}" data-field="utilisations.value" value="{{act.utilisations.value}}" style="width: 40px; text-align: center;">
+                <span style="font-weight: bold;">/</span>
+                <input type="number" class="act-input" data-index="{{id}}" data-field="utilisations.max" value="{{act.utilisations.max}}" style="width: 40px; text-align: center;">
+            </div>
+            <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
+                <label style="font-weight: bold; font-size: 0.85em; color: #333; white-space: nowrap;">Recharge :</label>
+                <select class="act-input" data-index="{{id}}" data-field="utilisations.frequence" style="width: 100%;">
+                    <option value="toujours" {{#if (eq act.utilisations.frequence "toujours")}}selected{{/if}}>À volonté</option>
+                    <option value="combat" {{#if (eq act.utilisations.frequence "combat")}}selected{{/if}}>Par Combat</option>
+                    <option value="jour" {{#if (eq act.utilisations.frequence "jour")}}selected{{/if}}>Par Jour</option>
+                    <option value="session" {{#if (eq act.utilisations.frequence "session")}}selected{{/if}}>Par Session</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="border-top: 1px dashed #ccc; padding-top: 10px;">
+            <label style="font-weight: bold; font-size: 0.85em; color: #8b0000; display: block; margin-bottom: 5px;">Effets Mécaniques</label>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 0.8em; color: #555;" title="Variables supportées: RU, @for, @mou, etc.">Formule ou Dégâts (ex: RU + @for + 2)</label>
+                    <input type="text" class="act-input" data-index="{{id}}" data-field="effet.degats" value="{{act.effet.degats}}" placeholder="ex: RU + @for + 2" style="width: 100%;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 0.8em; color: #555;">État infligé</label>
+                    <select class="act-input" data-index="{{id}}" data-field="effet.applique_etat" style="width: 100%;">
+                        {{selectOptions ../choixEtats selected=act.effet.applique_etat}}
+                    </select>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; background: rgba(74, 100, 145, 0.1); padding: 5px; border-radius: 3px; border: 1px dashed #4a6491;">
+                <div style="flex: 2;">
+                    <label style="font-size: 0.8em; color: #4a6491; font-weight: bold;">Sauvegarde de la cible (Annule l'effet)</label>
+                    <select class="act-input" data-index="{{id}}" data-field="effet.sauvegarde.stat" style="width: 100%;">
+                        {{selectOptions ../choixStats selected=act.effet.sauvegarde.stat}}
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 0.8em; color: #4a6491; font-weight: bold;">Modificateur</label>
+                    <input type="number" class="act-input" data-index="{{id}}" data-field="effet.sauvegarde.mod" value="{{act.effet.sauvegarde.mod}}" style="width: 100%;">
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {{else}}
+    <div style="text-align: center; color: #777; font-style: italic; padding: 20px; border: 1px dashed #ccc; border-radius: 5px;">
+        Cet objet n'a pas encore de capacités actives.<br>Ajoutez une activité pour l'utiliser en jeu (Attaque, sort, talent...)
+    </div>
+    {{/each}}
+</div>
