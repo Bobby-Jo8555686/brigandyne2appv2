@@ -70,7 +70,21 @@ export class PnjData extends foundry.abstract.TypeDataModel {
     static defineSchema() {
         return {
             type_pnj: new StringField({ initial: "sbire" }),
-            stats: new ObjectField({ initial: {} }),
+            stats: new SchemaField({
+                com: new SchemaField({ value: new NumberField({ initial: 30, integer: true }), label: new StringField({ initial: "Combat" }) }),
+                cns: new SchemaField({ value: new NumberField({ initial: 30, integer: true }), label: new StringField({ initial: "Connaissances" }) }),
+                dis: new SchemaField({ value: new NumberField({ initial: 30, integer: true }), label: new StringField({ initial: "Discrétion" }) }),
+                end: new SchemaField({ value: new NumberField({ initial: 30, integer: true }), label: new StringField({ initial: "Endurance" }) }),
+                for: new SchemaField({ value: new NumberField({ initial: 30, integer: true }), label: new StringField({ initial: "Force" }) }),
+                hab: new SchemaField({ value: new NumberField({ initial: 30, integer: true }), label: new StringField({ initial: "Habileté" }) }),
+                mag: new SchemaField({ value: new NumberField({ initial: 0, integer: true }), label: new StringField({ initial: "Magie" }) }),
+                mou: new SchemaField({ value: new NumberField({ initial: 30, integer: true }), label: new StringField({ initial: "Mouvement" }) }),
+                per: new SchemaField({ value: new NumberField({ initial: 30, integer: true }), label: new StringField({ initial: "Perception" }) }),
+                soc: new SchemaField({ value: new NumberField({ initial: 30, integer: true }), label: new StringField({ initial: "Sociabilité" }) }),
+                sur: new SchemaField({ value: new NumberField({ initial: 30, integer: true }), label: new StringField({ initial: "Survie" }) }),
+                tir: new SchemaField({ value: new NumberField({ initial: 30, integer: true }), label: new StringField({ initial: "Tir" }) }),
+                vol: new SchemaField({ value: new NumberField({ initial: 30, integer: true }), label: new StringField({ initial: "Volonté" }) })
+            }),
             vitalite: new ObjectField({ initial: { value: 0, max: 0 } }),
             sangfroid: new ObjectField({ initial: { value: 0, max: 0 } }),
             options: new ObjectField({ initial: { malus_armure: true } }),
@@ -206,3 +220,4 @@ export class CarriereData extends foundry.abstract.TypeDataModel {
     }
 
 }
+
