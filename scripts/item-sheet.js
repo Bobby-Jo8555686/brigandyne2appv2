@@ -229,6 +229,7 @@ export class BrigandyneItemSheet extends HandlebarsApplicationMixin(ItemSheetV2)
     static DEFAULT_OPTIONS = {
         classes: ["brigandyne2appv2", "sheet", "item"],
         position: { width: 520, height: 480 },
+        window: { resizable: true },
         form: { submitOnChange: true, closeOnSubmit: false }
     };
 
@@ -451,7 +452,7 @@ export class BrigandyneItemSheet extends HandlebarsApplicationMixin(ItemSheetV2)
         // ==========================================
         // 🔥 SÉCURITÉ ABSOLUE DE SAUVEGARDE GLOBALE
         // ==========================================
-        html.find('input[name="name"], input[name^="system."], select[name^="system."], textarea[name^="system."]').change(async ev => {
+        html.find('input[name="name"], input[name^="system."], select[name^="system."], textarea[name^="system."], prose-mirror[name^="system."]').change(async ev => {
             if (ev.currentTarget.classList.contains('act-input')) return; 
             
             const name = ev.currentTarget.name;
