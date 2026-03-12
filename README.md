@@ -1,47 +1,51 @@
-# **Bienvenue, Maîtres de Jeu et rôlistes de l'ombre !**
-Si vous lisez ces lignes, c'est que vous avez décidé de plonger vos joueurs dans la Renaissance sombre et sanglante de Thalios avec le système Brigandyne (2e Édition) pour Foundry VTT.
-J'ai conçu ce système (brigandyne2appv2) pour qu'il soit à la fois respectueux de la brutalité du jeu de rôle original et à la pointe de la technologie Foundry (il utilise la toute nouvelle architecture AppV2 pour une fluidité et une robustesse maximales). Puisque vous connaissez déjà Foundry, je ne vais pas vous expliquer comment créer un dossier, mais plutôt vous guider à travers les outils spécifiques que j'ai forgés pour vous faciliter la vie.
-Voici votre guide de survie.
-________________________________________
-## **1. Configuration et Options (Settings)**
-Avant de lancer votre première bagarre dans une taverne, allez faire un tour dans les paramètres du système (Configuration des options > System Settings). J'y ai intégré deux options particulièrement utiles :
-- Sbires vaincus en un coup (Monde) : Une règle optionnelle "cinématique". Si vous l'activez, le moindre point de dégât infligé à un PNJ de type "Sbire" fera tomber sa Vitalité à 0. Parfait pour les scènes épiques où les héros fendent la foule !
-- Actions rapides sur les Tokens / HUD (Client) : Activée par défaut, cette option ajoute un menu rapide directement sur le Token (voir section 4). Chaque joueur peut l'activer ou la désactiver selon ses préférences d'interface.
-________________________________________
-## **2. Les Fiches de Personnages (Actors)**
-Le système gère deux grands types d'Acteurs : les Personnages (PJ) et les PNJ.
-### **Le Verrouillage de la Fiche (Le Cadenas)**
-Vous remarquerez un petit cadenas en haut des fiches. L'AppV2 est très réactive, et un coup de molette accidentel est vite arrivé.
-- Cadenas ouvert (Vert) : Mode édition. Vous pouvez modifier les caractéristiques de base, glisser-déposer des objets/sorts, ou les supprimer.
-- Cadenas fermé (Rouge) : Mode jeu. La fiche est verrouillée ! Impossible de supprimer une arme par erreur ou de modifier la Force. Cependant, les joueurs peuvent toujours modifier leurs jauges dynamiques (Vitalité, Sang-Froid, Destin) et utiliser leurs objets. C'est le mode recommandé en pleine partie.
-### **La Gestion Intelligente des PNJ**
-Pour vous faire gagner du temps, les statistiques des PNJ (Vitalité et Sang-Froid) se calculent automatiquement selon les règles officielles en fonction du "Type de PNJ" que vous sélectionnez dans le menu déroulant :
-- Boss / Intermédiaire / Créature : Bénéficient de la formule complète et sont aussi robustes que les PJ.
-- Sbire : Considérés comme des "PNJ mineurs", leur formule de Vitalité est bridée (pas de bonus de Volonté, Endurance divisée par 10) et leur Sang-Froid réduit de moitié pour refléter leur lâcheté.
-________________________________________
-## **3. L'Inventaire et le Drag & Drop**
-Le système utilise un glisser-déposer (Drag & Drop) universel conçu spécifiquement pour ne pas créer de "clones" d'objets (un problème courant sur les nouvelles versions de Foundry).
-- Carrières, Armes, Domaines et Sorts : Glissez-les directement depuis vos compendiums vers la fiche du personnage (cadenas ouvert !).
-- Domaines Magiques : Vous pouvez ouvrir la fiche d'un "Domaine" pour y voir tous les sorts associés grâce à des liens dynamiques, et glisser ces sorts directement depuis le Domaine vers l'onglet Magie du PJ.
-________________________________________
-## **4. Le Cœur du Système : Combats et Jets de Dés**
-Brigandyne est un jeu mortel où tout se résout avec un D100. J'ai entièrement automatisé la mécanique pour vous éviter les calculs d'apothicaire à 2h du matin.
-Comment attaquer ?
-- Ciblez un ennemi (avec la touche 'T' ou le double clic droit habituel de Foundry).
-- Ouvrez votre fiche et cliquez sur l'icône de dé à côté de votre arme.
-- Une fenêtre de dialogue s'ouvre : vous pouvez y choisir votre posture martiale (Tactique : Efficace, En force, En finesse...), indiquer des avantages/désavantages, utiliser du Sang-Froid ou choisir de "Viser".
-- Cliquez sur "Frapper".
-**La magie de l'automatisation fait le reste** : Le système jette le dé, calcule le Résultat des Unités (RU), ajoute les dégâts de l'arme et la Force, soustrait automatiquement la protection de l'armure de la cible ciblée, et lui retire ses Points de Vitalité ! S'il y a un coup critique (RU = 0), le système gère même l'explosion du dé.
-### **Le "Token HUD" (L'arme secrète du MJ)**
-Vous avez 8 gobelins et 2 ogres sur la carte et vous ne voulez pas ouvrir 10 fiches de personnages ? J'ai pensé à vous.
-- Faites un **Clic Droit** sur n'importe quel Token. Une colonne translucide apparaît sur la droite du menu circulaire natif de Foundry. Elle liste instantanément **toutes les armes et tous les sorts** de ce personnage. Un clic sur une arme dans ce menu déclenche l'attaque avec la même automatisation que depuis la fiche.
-________________________________________
-## **5. La Magie (Le Grimoire)**
-La magie de Brigandyne est puissante mais dangereuse. Sur l'onglet "Magie" de la fiche, vous retrouverez les sorts divisés en Tours, Sortilèges et Rituels.
-- Lancer un Sort : Comme pour les armes, cliquez sur le dé du sort. Une boîte de dialogue s'ouvre pour vous demander la difficulté (préremplie si bien configurée dans le sort) et si vous récitez la formule ou dépensez des PV/SF pour vous aider.
-- Utilisations quotidiennes : Chaque sort possède une case à cocher pour tracker son utilisation. Rappelez aux joueurs que dépasser la limite leur coûtera des Points de Vitalité !
-________________________________________
-## **Le mot de la fin**
-Ce système a été pensé pour s'effacer au profit de l'histoire. Laissez l'automatisation gérer les soustractions d'armure et les calculs de RU, gardez vos fiches verrouillées en jeu, abusez du Token HUD pour vos monstres, et profitez de l'ambiance impitoyable de Thalios.
-Si vous trouvez un bug ou si votre hallebarde refuse de trancher un gobelin, n'hésitez pas à faire des retours. Bon jeu, et que le Destin veille sur vos PJ... ils en auront besoin !
+C'est une excellente idée. On a passé pas mal de temps le nez dans le moteur, il est temps de faire briller la carrosserie. Avec les 9 fichiers que tu m'as fournis (fiches, combats, magie, objets, datamodels, etc.), j'ai largement de quoi te faire un mode d'emploi précis et sans aucune approximation, car toute ta logique métier est là.
 
+Voici le manuel d'utilisation de ton système **Brigandyne 2 AppV2**, basé strictement sur ton code actuel.
+
+---
+
+### I. Les Personnages Joueurs (PJ)
+
+La gestion des PJ est fortement automatisée pour faciliter la création et la survie.
+
+* **Création Automatisée :** Lorsqu'un joueur glisse-dépose une "Origine" sur sa fiche, le système configure automatiquement ses points de Destin initiaux et crée instantanément les Atouts correspondants dans son inventaire (basés sur les champs "talents_auto" et "special").
+* **Vices et Vertus :** Les joueurs gèrent leurs traits de personnalité via un système de curseur (de -3 à +3). Cliquer sur les modificateurs ajuste automatiquement la valeur du Vice ou de la Vertu opposée (ex: Avare vs Généreux).
+* **Système de Repos :** Un bouton "Repos" permet de recharger les jauges d'activités. Le joueur choisit s'il s'agit d'une fin de combat, d'une fin de scène ou d'un repos long (journée). Le système ne recharge que les capacités correspondantes à la fréquence choisie.
+* **Dépassement de soi :** Un PJ peut dépenser 2 points de Sang-Froid (s'il en a assez) pour ignorer totalement l'effet de ses handicaps en cliquant sur le bouton dédié.
+
+### II. Les Personnages Non-Joueurs (PNJ)
+
+Les fiches de PNJ sont pensées pour ne pas surcharger le MJ et s'adaptent selon leur rôle.
+
+* **Quatre profils :** Un PNJ peut être défini comme Sbire, Intermédiaire, Boss ou Créature.
+* **Interface dynamique :** L'onglet "Magie" disparaît automatiquement pour les Sbires. L'onglet "Biographie" est caché pour les Sbires, Intermédiaires et Créatures, afin d'aller à l'essentiel en combat.
+* **La Règle du Sbire (One-Hit) :** Si l'option "Sbires vaincus en un coup" est cochée dans les paramètres du monde, le moindre point de dégât subi par un PNJ de type "Sbire" fait tomber ses PV à 0 instantanément.
+
+### III. L'Équipement et les Objets (Items)
+
+Les objets possèdent tous un "moteur d'activités" caché qui permet de déclencher des effets.
+
+* **Le Filtrage Strict des Atouts :** Pour qu'un Talent ou une Spécialité apparaisse dans une fenêtre de jet (Combat, Tir ou Magie), le champ **"Stat. liée"** de l'atout doit *obligatoirement* être rempli avec `com`, `tir` ou `mag`. C'est ce qui garantit des fenêtres propres.
+* **L'Armure et l'Encombrement :** Les armures équipées calculent automatiquement la protection globale, mais appliquent aussi directement leurs malus à l'Initiative, au Mouvement et à la Perception. Avoir un atout comme "Port d'armure" annule ces malus automatiquement.
+
+### IV. Le Système de Combat
+
+Le flux de combat est conçu pour réduire les allers-retours entre le MJ et le joueur.
+
+* **Gestion de l'Allonge :** Quand un attaquant cible un adversaire, le système compare automatiquement l'allonge de leurs armes équipées. Si l'attaquant a une arme plus longue (ex: Lance contre Dague), la case "Avantage d'Allonge (+5%)" est précochée. Si la cible porte un bouclier, son allonge est considérée comme maximale pour contrer celle de l'attaquant.
+* **Postures et Tactiques :** Avant de lancer les dés, le joueur choisit sa posture (Standard, Force, Finesse, Défensive, Attaques multiples ou Viser une faille d'armure). Le système applique de lui-même les modificateurs (Avantages/Désavantages, division des dégâts pour la finesse, etc.).
+* **Coups Tordus (Chifoumi) :** Un joueur peut tenter une ruse. Une fenêtre de Pierre-Papier-Ciseaux s'ouvre. S'il gagne, il obtient 1 Avantage. S'il perd, le MJ l'a vu venir et il prend 1 Désavantage.
+* **La Résolution en 1 Clic :** Si l'attaque réussit, un bouton "Appliquer les effets" apparaît dans le chat. Il permet au vainqueur (attaquant ou défenseur en cas de contre-attaque) de choisir ses effets tactiques (Blesser, Bousculer, Désengager). Une réussite Majeure (R+) débloque un second menu d'effets dévastateurs (Choc, Désarmement, Saignement, etc.). Le calcul des dégâts (Dés + Base + Bonus - Protection) est alors détaillé noir sur blanc.
+
+### V. La Magie et le Grimoire
+
+Le système de magie est régi par des règles de limites mémorielles et de sacrifices.
+
+* **La Limite d'Apprentissage :** Un personnage ne peut pas mémoriser plus de "Tours" ou de "Sortilèges/Rituels" que son indice (la dizaine) de Connaissances (CNS). Glisser un sort en trop bloquera l'action.
+* **L'Étude et l'Expérience :** Apprendre un sort coûte de l'XP (50 pour un Tour, 100 pour un Sortilège). Si le sort n'appartient pas à un Domaine Magique maîtrisé par le PJ, cela coûte 50 XP supplémentaires. Un jet de CNS est lancé automatiquement pour déterminer combien de jours ou semaines d'étude sont nécessaires.
+* **L'Incantation et l'Épuisement :** Si un mage dépasse son nombre d'utilisations quotidiennes (défini par son indice de Magie + ses bonus de "Slots"), incanter lui arrachera des PV (2 pour un Tour, 4 pour un Sort, 6 pour un Rituel).
+* **La Magie du Sang :** Un PJ peut sacrifier volontairement des PV dans la fenêtre de jet pour augmenter ses chances de succès (+1% par PV sacrifié, ou +2% s'il coche la case "Sang d'être magique").
+
+---
+
+Si tu veux que j'approfondisse une mécanique précise (comme le moteur d'activités universelles qui se cache dans `actor-activite.js`), ou si tu as des questions pour la rédaction de tes aides de jeu pour tes joueurs, n'hésite pas !
