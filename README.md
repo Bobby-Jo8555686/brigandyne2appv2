@@ -1,9 +1,3 @@
-C'est une excellente idée. On a passé pas mal de temps le nez dans le moteur, il est temps de faire briller la carrosserie. Avec les 9 fichiers que tu m'as fournis (fiches, combats, magie, objets, datamodels, etc.), j'ai largement de quoi te faire un mode d'emploi précis et sans aucune approximation, car toute ta logique métier est là.
-
-Voici le manuel d'utilisation de ton système **Brigandyne 2 AppV2**, basé strictement sur ton code actuel.
-
----
-
 ### I. Les Personnages Joueurs (PJ)
 
 La gestion des PJ est fortement automatisée pour faciliter la création et la survie.
@@ -46,6 +40,3 @@ Le système de magie est régi par des règles de limites mémorielles et de sac
 * **L'Incantation et l'Épuisement :** Si un mage dépasse son nombre d'utilisations quotidiennes (défini par son indice de Magie + ses bonus de "Slots"), incanter lui arrachera des PV (2 pour un Tour, 4 pour un Sort, 6 pour un Rituel).
 * **La Magie du Sang :** Un PJ peut sacrifier volontairement des PV dans la fenêtre de jet pour augmenter ses chances de succès (+1% par PV sacrifié, ou +2% s'il coche la case "Sang d'être magique").
 
----
-
-Si tu veux que j'approfondisse une mécanique précise (comme le moteur d'activités universelles qui se cache dans `actor-activite.js`), ou si tu as des questions pour la rédaction de tes aides de jeu pour tes joueurs, n'hésite pas !
