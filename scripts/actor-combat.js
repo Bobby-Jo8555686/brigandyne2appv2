@@ -41,7 +41,7 @@ export async function rollWeapon(itemId, extraOptions = {}) {
         talentsComboHtml += `<div class="b2-row"><label>Bonus Dégâts :</label><select id="bonusDmgStat" style="flex:1; margin-left:10px;"><option value="">- Aucun -</option>${specialBoosts.map(b => `<option value="${b.val}">${b.label}</option>`).join('')}</select></div>`;
     }
 
-    // --- REFORMATAGE DE LA GRILLE DES ATOUTS ---
+    // --- REFORMATAGE DE LA GRILLE DES ATOUTS (FILTRE STRICT) ---
     const relevantAtouts = this.items.filter(i => i.type === "atout" && i.system.stat_liee === statKey);
     let atoutsHtml = "";
     if (relevantAtouts.length > 0) {
@@ -305,9 +305,7 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
     const specs = weapon.system.specificites || {};
 
     let finalDamageNum = Number(weapon.system.degats_fixe) || 0;
-    let isSpecialDamage = false; 
     if (weapon.system.utilise_force) finalDamageNum += (this.system.stats.for.indice || 0);
-    let rawDamage = weapon.system.utilise_force ? `FOR${weapon.system.degats_fixe > 0 ? '+'+weapon.system.degats_fixe : (weapon.system.degats_fixe < 0 ? weapon.system.degats_fixe : '')}` : `${weapon.system.degats_fixe}`;
 
     const typeArme = weapon.system.type_arme || "melee";
     const isDistance = typeArme === "distance" || lancerArme;
@@ -325,14 +323,8 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
     
     // SPÉCIFICITÉS DISTANCE : PRÉCISION
     if (isDistance) {
-        if (specs.maniable) { 
-            score += 10; 
-            handicapLabels.push("Maniable (+10)"); 
-        }
-        if (specs.peu_precise) { 
-            score -= 10; 
-            handicapLabels.push("Peu précise (-10)"); 
-        }
+        if (specs.maniable) { score += 10; handicapLabels.push("Maniable (+10)"); }
+        if (specs.peu_precise) { score -= 10; handicapLabels.push("Peu précise (-10)"); }
     }
 
     if (bonusAllonge && !isDistance) { score += 5; handicapLabels.push("+5% (Allonge)"); }
@@ -421,9 +413,9 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
 
     let ru = result % 10; let isCrit = false; if (ru === 0) { ru = 10; isCrit = true; } 
     let isSuccess = result <= score;
-    let message = ""; let cssClass = ""; let damageHtml = "";
+    let message = ""; let cssClass = ""; 
     
-    // GESTION DES DOUBLÉS (Fragile / Risquée) appliqués immédiatement à l'attaquant
+    // GESTION DES DOUBLÉS (Fragile / Risquée)
     let isDouble = (result % 11 === 0 || result === 100);
     let alertHtml = "";
     if (isDouble && specs.fragile) {
@@ -436,7 +428,7 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
         alertHtml += `<div style="color: #fff; text-shadow: 1px 1px 2px black; font-weight: bold; background: rgba(183, 28, 28, 0.8); padding: 5px; margin-top: 5px; border-radius: 3px; text-align: center;">🩸 ARME RISQUÉE : Vous vous blessez et perdez ${dmgRisque} PV !</div>`;
     }
 
-    // FONCTION D'EXPLOSION (Pour les R+)
+    // FONCTION D'EXPLOSION
     const rollExplosion = async () => {
         let degatsExplosion = 10; let texteExplosion = "10"; let relance = 10;
         while (relance === 10) { let exploRoll = new Roll("1d10"); await exploRoll.evaluate(); relance = exploRoll.total; degatsExplosion += relance; texteExplosion += ` + ${relance}`; }
@@ -447,6 +439,9 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
     // LOGIQUE DE RÉSOLUTION TACTIQUE (Nouveau Flux)
     // ==========================================
     let hasCombatWinner = false;
+    let isEgalite = false;
+    let pnjDegatsBruts = 0;
+    let pjProtection = 0;
     let winner = null;
     let loser = null;
     let combatIsRPlus = false;
@@ -455,8 +450,30 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
     let combatProtection = 0;
     let armorPiercingNote = "";
     let winnerSpecs = {};
+    
+    // Variables pour le choix tactique du critique
+    let combatDegatsFlat = 0;
+    let texteFlat = "";
 
-    if (isSuccess) {
+    // ON INTERCEPTE LE DOUBLÉ EN MÊLÉE AVANT LE RESTE
+    if (result % 11 === 0 && result !== 100 && targetActor && typeArme === "melee" && !lancerArme && !sansRiposte) {
+        isEgalite = true;
+        message = "Égalité !";
+        cssClass = "neutral";
+        
+        combatDegatsBruts = ru + finalDamageNum + degatsBonus;
+        combatProtection = Number(targetActor.system.protection?.value) || 0;
+        
+        let targetWeapon = targetActor.items.find(i => i.type === "arme" && i.system.equipe && i.system.type_arme !== "distance");
+        let targetFinalDamageNum = 0;
+        if (targetWeapon) { 
+            targetFinalDamageNum = Number(targetWeapon.system.degats_fixe) || 0; 
+            if (targetWeapon.system.utilise_force) targetFinalDamageNum += (targetActor.system.stats?.for?.indice || 0); 
+        }
+        pnjDegatsBruts = ru + targetFinalDamageNum;
+        pjProtection = Number(this.system.protection?.value) || 0;
+
+    } else if (isSuccess) {
         // L'ATTAQUANT GAGNE LA PASSE
         hasCombatWinner = true;
         winner = this;
@@ -470,12 +487,32 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
             cssClass = isCrit ? "crit-success" : (combatIsRPlus ? "major-success" : "success"); 
         }
 
-        if (isCrit) { let explosion = await rollExplosion(); combatDegatsBruts = explosion.total + finalDamageNum + degatsBonus; combatTexteJet = explosion.texte; } 
-        else { combatDegatsBruts = ru + finalDamageNum + degatsBonus; combatTexteJet = `${ru}`; }
+        let degatsFlatBase = 0; 
+        let degatsExploBase = 0; let texteExplo = "";
+
+        if (isCrit) { 
+            let explosion = await rollExplosion(); 
+            degatsExploBase = explosion.total + finalDamageNum + degatsBonus; 
+            texteExplo = explosion.texte; 
+            degatsFlatBase = 10 + finalDamageNum + degatsBonus; 
+            texteFlat = "10"; 
+            
+            combatDegatsBruts = Math.floor(degatsExploBase / degatsDiviseur); 
+            combatTexteJet = texteExplo; 
+        } else if (combatIsRPlus) {
+            combatDegatsBruts = Math.floor((10 + finalDamageNum + degatsBonus) / degatsDiviseur); 
+            combatTexteJet = "10"; 
+        } else { 
+            combatDegatsBruts = Math.floor((ru + finalDamageNum + degatsBonus) / degatsDiviseur); 
+            combatTexteJet = `${ru}`; 
+        }
         
-        combatDegatsBruts = Math.floor(combatDegatsBruts / degatsDiviseur);
         if (bloqueRPlus) combatDegatsBruts = Math.max(0, combatDegatsBruts - 1);
         if (degatsNul) combatDegatsBruts = 0;
+
+        combatDegatsFlat = Math.floor(degatsFlatBase / degatsDiviseur);
+        if (bloqueRPlus) combatDegatsFlat = Math.max(0, combatDegatsFlat - 1);
+        if (degatsNul) combatDegatsFlat = 0;
 
         if (loser) {
             combatProtection = ignoreArmor ? 0 : (Number(loser.system.protection?.value) || 0);
@@ -495,9 +532,6 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
         }
 
         // Effets Narratifs Passifs
-        // ==========================================
-        // EFFETS NARRATIFS ET MÉCANIQUES (SPÉCIFICITÉS MÊLÉE/DISTANCE)
-        // ==========================================
         if (winnerSpecs.destruction) alertHtml += `<div style="color: #d4af37; font-weight: bold; margin-top: 5px; text-align: center;">🛡️ DESTRUCTION : L'armure ennemie perd 1 point de Protection !</div>`;
         if (winnerSpecs.degats_temporaires) alertHtml += `<div style="color: #d4af37; font-weight: bold; margin-top: 5px; text-align: center;">⏳ TEMPORAIRE : Ces blessures disparaîtront dans 1 heure.</div>`;
         if (winnerSpecs.anti_cavalier) alertHtml += `<div style="color: #b71c1c; font-weight: bold; margin-top: 5px; text-align: center;">🐎 ANTI-CAVALIER : Si la cible est montée, elle est désarçonnée (Dégâts = Chute) !</div>`;
@@ -505,23 +539,19 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
         if (winnerSpecs.saisie) alertHtml += `<div style="color: #d4af37; font-weight: bold; margin-top: 5px; text-align: center;">🤼 SAISIE : Vous pouvez choisir d'agripper la cible (Test FOR/FOR) !</div>`;
         if (winnerSpecs.choc) alertHtml += `<div style="color: #d4af37; font-weight: bold; margin-top: 5px; text-align: center;">💫 CHOC : Si vous appliquez l'effet 'Choc', le test END de la cible se fera avec 1 Désavantage.</div>`;
         
-        // Effets conditionnés par une Réussite Majeure (R+)
         if (combatIsRPlus) {
-            if (winnerSpecs.brise_lames) {
-                alertHtml += `<div style="color: #85c1e9; font-weight: bold; margin-top: 5px; border: 1px dashed #85c1e9; padding: 3px; text-align: center;">⚔️ BRISE-LAMES (R+) : L'arme ennemie est coincée ! Il doit la lâcher ou réussir un test de FOR à 0 pour la dégager.</div>`;
-            }
+            if (winnerSpecs.brise_lames) alertHtml += `<div style="color: #85c1e9; font-weight: bold; margin-top: 5px; border: 1px dashed #85c1e9; padding: 3px; text-align: center;">⚔️ BRISE-LAMES (R+) : L'arme ennemie est coincée ! Il doit la lâcher ou réussir un test de FOR à 0 pour la dégager.</div>`;
             if (winnerSpecs.immobilisation) {
                 alertHtml += `<div style="color: #8e44ad; font-weight: bold; margin-top: 5px; border: 1px dashed #8e44ad; padding: 3px; text-align: center;">🕸️ IMMOBILISATION (R+) : La cible est bloquée ! L'attaque n'inflige aucun dégât.</div>`;
-                combatDegatsBruts = 0; // Mécanique : l'arme inflige 0 dégât sur cette action spécifique
+                combatDegatsBruts = 0; 
             }
         }
-        // SPÉCIFICITÉS DISTANCE : RECHARGEMENT ET CHOC
+        
         if (isDistance) {
             if (specs.lente_2) alertHtml += `<div style="color: #e65100; font-weight: bold; margin-top: 5px; text-align: center;">⌛ LENTE : 2 tours complets requis pour recharger.</div>`;
             if (specs.lente_5) alertHtml += `<div style="color: #b71c1c; font-weight: bold; margin-top: 5px; text-align: center;">⌛⌛ TRÈS LENTE : 5 tours complets requis pour recharger.</div>`;
             if (specs.assommante) alertHtml += `<div style="color: #d4af37; font-weight: bold; margin-top: 5px; text-align: center;">💫 ASSOMMANTE : Si l'effet Choc est appliqué, le test END se fait avec 1 Désavantage.</div>`;
             
-            // Le bouton pour le 2ème tir (sur R+)
             if (combatIsRPlus && specs.rplus_2e_tir) {
                 alertHtml += `
                 <div style="margin-top: 10px; border: 1px solid #4a6491; padding: 5px; background: rgba(74, 100, 145, 0.1); border-radius: 3px; text-align: center;">
@@ -535,7 +565,6 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
     } else {
         // L'ATTAQUANT RATE
         let isMajorFail = result >= 91 && score < 80;
-        // SPÉCIFICITÉ DISTANCE : POUDRE INSTABLE
         if (isDistance && specs.poudre) {
             if (isCrit) {
                 let exploPoudre = await new Roll("1d10").evaluate();
@@ -550,13 +579,12 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
         cssClass = isCrit ? "crit-fail" : (isMajorFail ? "major-fail" : "fail");
         if (tirMelee && (isCrit || isMajorFail)) alertHtml += `<div style="margin-top: 8px; color: #ffcccc; font-weight: bold; font-size: 1.1em; border-top: 1px dashed #ffcccc; padding-top: 5px;">💥 Aïe ! Le tir touche un allié dans la mêlée !</div>`;
 
-        // LE DÉFENSEUR GAGNE LA PASSE (Si Mêlée & Pas sans riposte)
+        // LE DÉFENSEUR GAGNE LA PASSE
         if (targetActor && typeArme === "melee" && !lancerArme && !sansRiposte) {
             hasCombatWinner = true;
             winner = targetActor;
             loser = this;
             
-            // Si l'attaquant a fait un échec critique ou majeur, c'est un R+ pour le défenseur !
             combatIsRPlus = isCrit || isMajorFail;
             
             let targetWeapon = winner.items.find(i => i.type === "arme" && i.system.equipe && i.system.type_arme !== "distance");
@@ -567,8 +595,19 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
                 winnerSpecs = targetWeapon.system.specificites || {};
             }
             
-            if (combatIsRPlus) { let explosion = await rollExplosion(); combatDegatsBruts = explosion.total + targetFinalDamageNum; combatTexteJet = explosion.texte; } 
-            else { combatDegatsBruts = ru + targetFinalDamageNum; combatTexteJet = `${ru}`; }
+            if (isCrit) { 
+                let explosion = await rollExplosion(); 
+                combatDegatsBruts = explosion.total + targetFinalDamageNum; 
+                combatTexteJet = explosion.texte; 
+                combatDegatsFlat = 10 + targetFinalDamageNum;
+                texteFlat = "10";
+            } else if (isMajorFail) { 
+                combatDegatsBruts = 10 + targetFinalDamageNum; 
+                combatTexteJet = "10"; 
+            } else { 
+                combatDegatsBruts = ru + targetFinalDamageNum; 
+                combatTexteJet = `${ru}`; 
+            }
             
             combatProtection = Number(loser.system.protection?.value) || 0;
             let ignoredProt = 0;
@@ -584,7 +623,7 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
     }
 
     // ==========================================
-    // CRÉATION DE LA CARTE DE CHAT (DÉTAIL AU SURVOL)
+    // CRÉATION DE LA CARTE DE CHAT
     // ==========================================
     let recapHtml = `
     <style>
@@ -608,9 +647,6 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
         </div>
     </div>`;
 
-    // ==========================================
-    // INITIALISATION ET AFFICHAGE DU JET
-    // ==========================================
     let content = `<div class="brigandyne2-roll">`;
     content += `<h3 style="border-bottom: 1px solid #444; padding-bottom: 3px; margin-bottom: 5px; color: #fff;">Attaque : ${weapon.name}</h3>`;
     content += recapHtml;
@@ -618,9 +654,29 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
     content += `<div class="roll-result ${cssClass}" style="text-align: center; font-weight: bold; margin-bottom: 5px;">${message}</div>`;
 
     // ---------------------------------------------
-    // ENCART DE CHOIX TACTIQUES (Si un gagnant existe)
+    // ENCART DE CHOIX TACTIQUES (Gagnant ou Égalité)
     // ---------------------------------------------
-    if (hasCombatWinner && loser) {
+    if (isEgalite) {
+        let payloadTie = {
+            pjId: this.uuid,
+            pnjId: targetActor.uuid,
+            pjDegatsBruts: combatDegatsBruts,
+            pnjDegatsBruts: pnjDegatsBruts,
+            pjProtection: pjProtection,
+            pnjProtection: combatProtection,
+            sbireOneHit: game.settings.get("brigandyne2appv2", "sbireOneHit")
+        };
+        let safePayloadTie = JSON.stringify(payloadTie).replace(/"/g, '&quot;');
+        
+        content += `
+        <div class="combat-tactics-card" style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.1); border: 2px solid #b0bec5; border-radius: 5px;">
+            <h4 style="margin: 0 0 5px 0; color: #b0bec5; text-align: center; border-bottom: 1px solid #b0bec5; padding-bottom: 3px;"><i class="fas fa-balance-scale"></i> Égalité Parfaite !</h4>
+            <div style="text-align: center; font-size: 0.9em; font-style: italic; color: #ccc; margin-bottom: 10px;">Les armes s'entrechoquent (Doublé). Que se passe-t-il ?</div>
+            
+            <button class="resolve-tie-btn" data-type="parade" data-payload="${safePayloadTie}" style="width: 100%; margin-bottom: 5px; background: #607d8b; color: #fff; border: none; padding: 5px; cursor: pointer; font-weight: bold; border-radius: 3px;"><i class="fas fa-shield-alt"></i> Parade mutuelle (0 Dégât)</button>
+            <button class="resolve-tie-btn" data-type="frappe" data-payload="${safePayloadTie}" style="width: 100%; background: #b71c1c; color: #fff; border: none; padding: 5px; cursor: pointer; font-weight: bold; border-radius: 3px;"><i class="fas fa-tint"></i> Frappe croisée (Blessures simultanées)</button>
+        </div>`;
+    } else if (hasCombatWinner && loser) {
         let optionsHtmlBase = `
             <option value="blesser" selected>🗡️ Blesser (Appliquer les dégâts)</option>
             <option value="bousculer">🛡️ Bousculer (Mettre à terre / Repousser)</option>
@@ -628,6 +684,7 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
         `;
         let optionsHtmlBonus = `
             <option value="none" selected>-- Choisissez un 2ème effet --</option>
+            ${isCrit ? '<option value="devastateur" style="color: #b71c1c; font-weight: bold;">💥 Coup Dévastateur (Dégâts Explosifs !)</option>' : ''}
             <option value="blesser">🗡️ Blesser (Si non pris au-dessus)</option>
             <option value="bousculer">🛡️ Bousculer</option>
             <option value="desengager">💨 Désengager</option>
@@ -645,19 +702,19 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
             </optgroup>
         `;
 
-       let payload = {
+        let payload = {
             winnerId: winner.uuid,
             loserId: loser.uuid,
             isRPlus: combatIsRPlus,
-            degatsBruts: combatDegatsBruts,
-            // --- LES DONNÉES QUE TU DEMANDES (CORRIGÉES) ---
-            detDie: combatTexteJet,    // Contient le RU ou l'Explosion
-            detBase: finalDamageNum,   // Contient Arme + FOR
-            detBonus: degatsBonus,     // Contient Posture + Talents
-            detDiv: degatsDiviseur,    // Contient 2 (Finesse) ou 1
-            // ----------------------------------------------
+            isCrit: isCrit,             
+            degatsFlat: combatDegatsFlat, 
+            texteFlat: texteFlat,         
+            degatsBruts: combatDegatsBruts, 
+            detDie: combatTexteJet,
+            detBase: finalDamageNum,
+            detBonus: degatsBonus,
+            detDiv: degatsDiviseur,
             protection: combatProtection,
-            texteJet: combatTexteJet,
             armorPiercingNote: armorPiercingNote,
             degatsNul: degatsNul,
             isCounter: (winner.id !== this.id),
@@ -685,10 +742,9 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
             </div>` : ''}
             
             <button class="resolve-tactics-btn" data-payload="${safePayload}" style="width: 100%; background: ${cardHeaderColor}; color: #fff; border: none; padding: 5px; cursor: pointer; font-weight: bold; border-radius: 3px; text-transform: uppercase;"><i class="fas fa-check-double"></i> Appliquer les effets</button>
-            <div style="font-size: 0.8em; color: #aaa; text-align: center; margin-top: 5px;">(Dégâts de base potentiels de l'arme : ${combatDegatsBruts})</div>
+            <div style="font-size: 0.8em; color: #aaa; text-align: center; margin-top: 5px;">(Dégâts de base potentiels de l'arme : ${isCrit ? combatDegatsFlat + ' (ou ' + combatDegatsBruts + ' si explosifs)' : combatDegatsBruts})</div>
         </div>`;
     } else if (hasCombatWinner && !loser) {
-        // Tir réussi sans cible sélectionnée (Juste pour voir les dégâts potentiels)
         content += `<div class="weapon-damage success-box" style="color: #fff;">Dégâts potentiels : <strong>${combatDegatsBruts}</strong></div>`;
     } else if (!hasCombatWinner && options.sansRiposte) {
         content += `<div class="weapon-damage" style="background: rgba(0,0,0,0.5); border: 1px solid #444; color: #ccc;"><em>Attaque manquée. L'adversaire n'était pas en mesure de riposter.</em></div>`;
@@ -698,7 +754,6 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
 
     content += alertHtml;
 
-    // BOUTON DOUÉ (Inversion)
     if (forcedResult === null || forcedResult === false) {
         const hasArmeFetiche = this.items.some(i => i.type === "atout" && i.name.toLowerCase().includes("fétiche") && i.system.armeLieeId === weapon.id);
         const hasDoue = this.items.some(i => i.type === "atout" && i.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes("doue") && (i.system.stat_liee === statKey || i.system.stat_liee === ""));
