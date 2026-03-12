@@ -1,0 +1,58 @@
+<div class="tab details" data-tab="details" style="display:block;">
+    <div class="item-grid">
+        <div class="form-group-item">
+            <label>Équipée</label>
+            <input type="checkbox" name="system.equipe" {{checked system.equipe}}/>
+        </div>
+        <div class="form-group-item">
+            <label>Type de protection</label>
+            <select name="system.type_armure">
+                {{selectOptions choixTypeArmure selected=system.type_armure}}
+            </select>
+        </div>
+        <div class="form-group-item">
+            <label>Protection</label>
+            <input type="number" name="system.protection" value="{{system.protection}}"/>
+        </div>
+
+        <div class="form-group-item">
+            <label title="Malus à l'Initiative (-x)">Malus Init</label>
+            <input type="number" name="system.malus_init" value="{{system.malus_init}}"/>
+        </div>
+        <div class="form-group-item">
+            <label title="Malus au Mouvement (%)">Malus MOU</label>
+            <input type="number" name="system.malus_mou" value="{{system.malus_mou}}"/>
+        </div>
+        <div class="form-group-item">
+            <label title="Malus à la Perception (%)">Malus PER</label>
+            <input type="number" name="system.malus_per" value="{{system.malus_per}}"/>
+        </div>
+    </div>
+
+    <div class="item-header grey mt-10" style="background: rgba(0,0,0,0.1); padding: 5px; border-radius: 3px; border-bottom: 2px solid #4a6491;">
+        <h3 class="item-title" style="margin: 0; color: #4a6491; font-family: 'Georgia', serif; font-size: 1.1em;">Spécificités de l'armure</h3>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; font-size: 0.85em; color: #111;">
+        <label title="Cochez si c'est du cuir, du cuir clouté ou de la cotte de mailles" style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.souple" {{checked system.souple}}> Armure souple
+        </label>
+        <label title="Ne couvre pas tout le corps (ex: plastron seul)" style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.partielle" {{checked system.partielle}}> Armure partielle
+        </label>
+        
+        <label title="Chaude et fatigante : 1 Désavantage aux actions non-martiales s'il fait chaud" style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.chaude_fatigante" {{checked system.chaude_fatigante}}> Chaude et fatigante
+        </label>
+        <label title="Nécessite 45 min et l'aide de serviteurs pour être équipée" style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.lente_equiper" {{checked system.lente_equiper}}> Lente à équiper
+        </label>
+    </div>
+
+    <div class="form-group-item mt-10" style="background: rgba(0,0,0,0.05); padding: 5px; border-radius: 3px; border: 1px dashed #4a6491;">
+        <label title="Désavantages imposés aux tirs ennemis">Couverture contre les tirs (Bouclier/Pavois) :</label>
+        <select name="system.couvert_tirs" style="width: 100%; margin-top: 5px;">
+            {{selectOptions choixCouverture selected=system.couvert_tirs}}
+        </select>
+    </div>
+</div>
