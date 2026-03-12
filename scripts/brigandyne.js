@@ -110,7 +110,7 @@ Hooks.once("init", async function() {
         "systems/brigandyne2appv2/templates/item/parts/archetype.hbs",
         "systems/brigandyne2appv2/templates/item/parts/carriere.hbs",
         "systems/brigandyne2appv2/templates/item/parts/description.hbs",
-        "systems/brigandyne2appv2/templates/item/parts/item-activities.hbs", // 🔥 CRUCIAL POUR LES ACTIVITÉS
+        "systems/brigandyne2appv2/templates/item/parts/item-activities.hbs",
 
         // --- PARTS DES ACTEURS ---
         "systems/brigandyne2appv2/templates/actor/parts/header.hbs",
@@ -206,10 +206,8 @@ Hooks.once("init", async function() {
                 if (!payloadStr) return;
                 const payload = JSON.parse(payloadStr.replace(/&quot;/g, '"'));
                 
-                // Code nettoyé : on ne récupère que ce qui est utile
-                let { winnerId, loserId, degatsBruts, protection, armorPiercingNote, degatsNul, isCounter, sbireOneHit } = payload;
+                let { winnerId, loserId } = payload;
 
-                // 🌟 RÉCUPÉRATION BLINDÉE (Accepte les UUID complets ou les simples IDs)
                 let winnerActor = await fromUuid(winnerId);
                 if (!winnerActor) winnerActor = game.actors.get(winnerId);
 
@@ -218,7 +216,6 @@ Hooks.once("init", async function() {
                     loserActor = await fromUuid(loserId);
                     if (!loserActor) loserActor = game.actors.get(loserId);
                     
-                    // Sécurité anti-sbires : on cible bien le pion sur la carte
                     if (loserActor && !loserActor.isToken && canvas.ready) {
                         const currentTarget = Array.from(game.user.targets)[0];
                         if (currentTarget && currentTarget.actor) {
@@ -255,6 +252,7 @@ Hooks.once("init", async function() {
 
                 const checkEffect = (eff) => {
                     switch(eff) {
+                        case "devastateur": appliedEffectsText.push("💥 <b>Coup Dévastateur</b> (Le dé explose !)"); break;
                         case "blesser": appliedEffectsText.push("🗡️ <b>Blessure infligée</b>"); break;
                         case "bousculer": appliedEffectsText.push("🛡️ <b>Bousculé</b>"); break;
                         case "desengager": appliedEffectsText.push("💨 <b>Désengagement</b>"); break;
@@ -279,25 +277,39 @@ Hooks.once("init", async function() {
                 appliedEffectsText.forEach(t => resultHtml += `<li>${t}</li>`);
                 resultHtml += `</ul>`;
 
-                if (isBlesser && !degatsNul) {
-                    if (isPrecision) { protection = 0; armorPiercingNote = " (Précision)"; }
-                    if (isPuissance) { degatsBruts += 1; }
-                    finalDamage = Math.max(0, degatsBruts - protection);
+                // ==========================================
+                // VÉRIFICATION DU COUP CRITIQUE (Le fameux "Ou")
+                // ==========================================
+                let finalDegatsBruts = payload.degatsBruts;
+                let finalDetDie = payload.detDie;
+
+                if (payload.isCrit && effect2 !== "devastateur") {
+                    // Si on a fait un 0 mais qu'on a choisi un autre effet tactique, on perd l'explosion
+                    finalDegatsBruts = payload.degatsFlat;
+                    finalDetDie = payload.texteFlat;
+                }
+
+                if (isBlesser && !payload.degatsNul) {
+                    if (isPrecision) { payload.protection = 0; payload.armorPiercingNote = " (Précision)"; }
+                    if (isPuissance) { finalDegatsBruts += 1; }
+                    
+                    // RÈGLE : 1 point de dégât minimum si l'attaque blesse
+                    finalDamage = Math.max(1, finalDegatsBruts - payload.protection);
                     
                     if (loserActor) {
                         let newHp = Math.max(0, loserActor.system.vitalite.value - finalDamage);
-                        if (sbireOneHit && loserActor.type === "pnj" && loserActor.system.type_pnj === "sbire" && finalDamage > 0) newHp = 0;
+                        if (payload.sbireOneHit && loserActor.type === "pnj" && loserActor.system.type_pnj === "sbire" && finalDamage > 0) newHp = 0;
                         
                         let finalUpdates = { "system.vitalite.value": newHp };
                         if (hasHandicapChanges) finalUpdates["system.handicaps"] = currentHandicaps;
                         
                         await loserActor.update(finalUpdates);
                         
-                        // Préparation de la formule de calcul
-                        let detailCalcul = `${payload.detDie} <small>RU</small> + ${payload.detBase} <small>Base</small> + ${payload.detBonus} <small>Bonus</small>`;
+                        // Préparation de la formule de calcul en clair
+                        let detailCalcul = `${finalDetDie} <small>RU</small> + ${payload.detBase} <small>Base</small> + ${payload.detBonus} <small>Bonus</small>`;
                         if (payload.detDiv > 1) detailCalcul = `(${detailCalcul}) / ${payload.detDiv}`;
 
-                        let boxColor = isCounter ? "counter-attack-box" : "success-box";
+                        let boxColor = payload.isCounter ? "counter-attack-box" : "success-box";
 
                         resultHtml += `
                         <div class="weapon-damage ${boxColor}" style="margin-top: 10px; padding: 10px; border-radius: 5px; background: rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.2);">
@@ -306,11 +318,11 @@ Hooks.once("init", async function() {
                             <div style="font-size: 0.85em; color: #aaa; margin-top: 5px; border-top: 1px dashed #555; padding-top: 5px;">
                                 <div style="display: flex; justify-content: space-between;">
                                     <span>Calcul Bruts :</span>
-                                    <span>(${detailCalcul}) = <b>${payload.degatsBruts}</b></span>
+                                    <span>(${detailCalcul}) = <b>${finalDegatsBruts}</b></span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; margin-top: 2px;">
                                     <span>Réduction :</span>
-                                    <span>- ${protection} <small>Prot.</small>${armorPiercingNote}</span>
+                                    <span>- ${payload.protection} <small>Prot.</small>${payload.armorPiercingNote}</span>
                                 </div>
                             </div>
                         </div>`;
@@ -326,8 +338,74 @@ Hooks.once("init", async function() {
                     let doc = parser.parseFromString(chatMessage.content, 'text/html');
                     let cardEl = doc.querySelector('.combat-tactics-card');
                     if (cardEl) {
-                        let headerColor = isCounter ? "#b71c1c" : "#4CAF50";
+                        let headerColor = payload.isCounter ? "#b71c1c" : "#4CAF50";
                         cardEl.innerHTML = `<h4 style="margin: 0; color: ${headerColor}; text-align: center; border-bottom: 1px solid ${headerColor};"><i class="fas fa-check-circle"></i> Résolu</h4>${resultHtml}`;
+                        await chatMessage.update({ content: doc.body.innerHTML });
+                    }
+                }
+                return;
+            }
+
+            // ==========================================
+            // 1.5 GESTION DES ÉGALITÉS (DOUBLÉS)
+            // ==========================================
+            let tieBtn = ev.target.closest(".resolve-tie-btn");
+            if (tieBtn) {
+                ev.preventDefault();
+                const payloadStr = tieBtn.dataset.payload;
+                if (!payloadStr) return;
+                const payload = JSON.parse(payloadStr.replace(/&quot;/g, '"'));
+                const tieType = tieBtn.dataset.type; // "parade" ou "frappe"
+                
+                let pjActor = await fromUuid(payload.pjId);
+                let pnjActor = await fromUuid(payload.pnjId);
+                if (!pjActor && payload.pjId) pjActor = game.actors.get(payload.pjId);
+                if (!pnjActor && payload.pnjId) pnjActor = game.actors.get(payload.pnjId);
+
+                const card = tieBtn.closest('.combat-tactics-card');
+                const messageEl = tieBtn.closest('.message');
+                const chatMessage = messageEl ? game.messages.get(messageEl.dataset.messageId) : null;
+                
+                let resultHtml = "";
+                
+                if (tieType === "parade") {
+                    resultHtml = `<div style="text-align: center; color: #ccc; padding: 10px;"><em>Les deux combattants parent ou esquivent. Aucun dégât.</em></div>`;
+                } else if (tieType === "frappe") {
+                    // Dégâts minimum de 1 garantis
+                    let dmgToPnj = Math.max(1, payload.pjDegatsBruts - payload.pnjProtection);
+                    let dmgToPj = Math.max(1, payload.pnjDegatsBruts - payload.pjProtection);
+                    
+                    if (pnjActor) {
+                        let newPnjHp = Math.max(0, pnjActor.system.vitalite.value - dmgToPnj);
+                        if (payload.sbireOneHit && pnjActor.type === "pnj" && pnjActor.system.type_pnj === "sbire" && dmgToPnj > 0) newPnjHp = 0;
+                        await pnjActor.update({"system.vitalite.value": newPnjHp});
+                    }
+                    if (pjActor) {
+                        let newPjHp = Math.max(0, pjActor.system.vitalite.value - dmgToPj);
+                        await pjActor.update({"system.vitalite.value": newPjHp});
+                    }
+                    
+                    resultHtml = `
+                    <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 10px;">
+                        <div style="flex: 1; background: rgba(183,28,28,0.2); padding: 5px; border: 1px solid #b71c1c; border-radius: 3px; text-align: center;">
+                            <strong style="color: #ffcccc;">${pjActor ? pjActor.name : 'PJ'} subit :</strong><br>
+                            <span style="font-size: 1.2em; font-weight: bold; color: #fff;">${dmgToPj} PV</span>
+                            <div style="font-size: 0.8em; color: #aaa;">(${payload.pnjDegatsBruts} Br. - ${payload.pjProtection} Pr.)</div>
+                        </div>
+                        <div style="flex: 1; background: rgba(183,28,28,0.2); padding: 5px; border: 1px solid #b71c1c; border-radius: 3px; text-align: center;">
+                            <strong style="color: #ffcccc;">${pnjActor ? pnjActor.name : 'PNJ'} subit :</strong><br>
+                            <span style="font-size: 1.2em; font-weight: bold; color: #fff;">${dmgToPnj} PV</span>
+                            <div style="font-size: 0.8em; color: #aaa;">(${payload.pjDegatsBruts} Br. - ${payload.pnjProtection} Pr.)</div>
+                        </div>
+                    </div>`;
+                }
+
+                if (chatMessage && card) {
+                    let parser = new DOMParser();
+                    let doc = parser.parseFromString(chatMessage.content, 'text/html');
+                    let cardEl = doc.querySelector('.combat-tactics-card');
+                    if (cardEl) {
+                        cardEl.innerHTML = `<h4 style="margin: 0; color: #b0bec5; text-align: center; border-bottom: 1px solid #b0bec5;"><i class="fas fa-check-circle"></i> Égalité Résolue</h4>${resultHtml}`;
                         await chatMessage.update({ content: doc.body.innerHTML });
                     }
                 }
