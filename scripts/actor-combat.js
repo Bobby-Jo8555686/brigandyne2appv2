@@ -14,9 +14,15 @@ export async function rollWeapon(itemId, extraOptions = {}) {
     const hasAgile = hasTalent("agile");
     const hasBrute = hasTalent("brute");
     const forcedAdv = extraOptions.forcedAdv || 0;
+    const isEnchainement = extraOptions.isEnchainement || false;
+    const forcedSansRiposte = extraOptions.forcedSansRiposte || false;
+    
     let alerteTirRapide = "";
     if (forcedAdv === -1) {
         alerteTirRapide = `<div style="color: #b71c1c; font-weight: bold; text-align: center; margin-bottom: 10px; padding: 5px; background: rgba(183, 28, 28, 0.1); border: 1px dashed #b71c1c;">🏹 TIR RAPIDE : 1 Désavantage forcé !</div>`;
+    }
+    if (isEnchainement) {
+        alerteTirRapide = `<div style="color: #e65100; font-weight: bold; text-align: center; margin-bottom: 10px; padding: 5px; background: rgba(230, 81, 0, 0.1); border: 1px dashed #e65100;">⚔️ ENCHAÎNEMENT : Dégâts finaux divisés par 2 !</div>`;
     }
 
     let specialBoosts = [];
@@ -41,24 +47,39 @@ export async function rollWeapon(itemId, extraOptions = {}) {
         talentsComboHtml += `<div class="b2-row"><label>Bonus Dégâts :</label><select id="bonusDmgStat" style="flex:1; margin-left:10px;"><option value="">- Aucun -</option>${specialBoosts.map(b => `<option value="${b.val}">${b.label}</option>`).join('')}</select></div>`;
     }
 
-    // --- REFORMATAGE DE LA GRILLE DES ATOUTS (FILTRE STRICT) ---
+    // --- REFORMATAGE DE LA GRILLE DES ATOUTS (SANG & ACIER) ---
     const relevantAtouts = this.items.filter(i => i.type === "atout" && i.system.stat_liee === statKey);
     let atoutsHtml = "";
     if (relevantAtouts.length > 0) {
-        atoutsHtml = `<div class="b2-section"><div class="b2-section-title"><i class="fas fa-star" style="color:#d4af37;"></i> Talents & Spécialités</div><div class="b2-grid">`;
+        atoutsHtml = `<div class="b2-section">
+            <div class="b2-section-title" style="color: #a68a24; border-bottom: 1px solid #5c4d16; margin-bottom: 8px;"><i class="fas fa-star"></i> Talents & Spécialités</div>`;
         for (let a of relevantAtouts) {
             const bonus = Number(a.system.bonus) || 0;
-            // Troncature de la description si trop longue (max 35 caractères)
             let rawEffet = a.system.effet || "";
-            let shortEffet = rawEffet.length > 35 ? rawEffet.substring(0, 32) + "..." : rawEffet;
+            let shortEffet = rawEffet.length > 45 ? rawEffet.substring(0, 42) + "..." : rawEffet;
 
             if (bonus > 0) {
-                atoutsHtml += `<label class="b2-talent"><input type="checkbox" class="atout-bonus" value="${bonus}" title="${rawEffet}"/><div style="flex:1;"><strong style="color:#111;">${a.name} (+${bonus})</strong><span class="b2-talent-desc">${shortEffet}</span></div></label>`;
+                atoutsHtml += `
+                <div class="b2-dialog-row">
+                    <label class="b2-dialog-label" style="cursor: pointer; display: flex; flex-direction: column;">
+                        <span style="font-weight: bold; color: #a68a24;">${a.name} (+${bonus})</span>
+                        <span style="font-size: 0.8em; color: #777; font-style: italic; font-weight: normal;">${shortEffet}</span>
+                    </label>
+                    <div class="b2-dialog-controls">
+                        <input type="checkbox" class="atout-bonus" value="${bonus}" title="${rawEffet}" />
+                    </div>
+                </div>`;
             } else {
-                atoutsHtml += `<div class="b2-talent" style="opacity:0.6; cursor:help;" title="${rawEffet} (Passif)"><div style="flex:1;"><strong style="color:#111;">${a.name}</strong><span class="b2-talent-desc">${shortEffet}</span></div></div>`;
+                atoutsHtml += `
+                <div class="b2-dialog-row" style="opacity: 0.7;">
+                    <div class="b2-dialog-label" style="display: flex; flex-direction: column;">
+                        <span style="font-weight: bold; color: #888;">${a.name}</span>
+                        <span style="font-size: 0.8em; color: #555; font-style: italic; font-weight: normal;">${shortEffet}</span>
+                    </div>
+                </div>`;
             }
         }
-        atoutsHtml += `</div></div>`;
+        atoutsHtml += `</div>`;
     }
 
     // --- DÉTECTION GLOBALE DE LA CIBLE ---
@@ -113,109 +134,149 @@ export async function rollWeapon(itemId, extraOptions = {}) {
                 allongeText = `Bonus d'Allonge (+5%) - Égalité avec ${targetWeaponName}`;
             }
         }
-        
-        allongeHtml = `
-        <div class="b2-row" style="background: rgba(212, 175, 55, 0.1); padding: 4px 6px; border-radius: 3px; border-left: 3px solid #d4af37; margin-top: 6px;">
-            <label title="Si votre arme est plus longue, ou si vous êtes entré dans la garde adverse." style="font-size: 0.85em; color: #8b6d05; font-weight: bold; flex:1;">${allongeText}</label>
-            <input type="checkbox" id="bonusAllonge" ${allongeChecked} />
-        </div>`;
+        allongeHtml = `<div class="b2-dialog-row" style="border-left: 3px solid #d4af37;"><label class="b2-dialog-label" for="bonusAllonge" style="color: #d4af37; font-size: 0.85em;">${allongeText}</label><div class="b2-dialog-controls"><input type="checkbox" id="bonusAllonge" ${allongeChecked} /></div></div>`;
     }
 
     // --- CONSTRUCTION DU DIALOGUE HTML ---
     let dialogContent = `
-    <style>
-        .b2-dialog { font-family: 'Signika', 'Palatino Linotype', serif; }
-        .b2-section { border: 1px solid #ccc; border-radius: 4px; padding: 8px; margin-bottom: 10px; background: rgba(0,0,0,0.02); }
-        .b2-section-title { font-weight: bold; font-size: 0.9em; text-transform: uppercase; color: #555; margin-bottom: 6px; border-bottom: 1px solid #ccc; padding-bottom: 2px; }
-        .b2-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .b2-row label { font-size: 0.9em; cursor: pointer; color: #333; margin: 0; }
-        .b2-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-        .b2-talent { background: rgba(255, 255, 255, 0.7); border: 1px solid #e0e0e0; padding: 4px; border-radius: 3px; display: flex; align-items: flex-start; gap: 6px; margin: 0; box-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
-        .b2-talent input { margin: 0; margin-top: 2px; cursor: pointer; }
-        .b2-talent-desc { font-size: 0.75em; color: #777; font-style: italic; display: block; line-height: 1.1; margin-top: 2px; }
-    </style>
-
-    ${alerteTirRapide}
-    
-    <form class="b2-dialog">
-        
-        <div class="b2-section">
-            <div class="b2-section-title"><i class="fas fa-crosshairs"></i> Circonstances d'Attaque</div>
-            ${isDistance ? `
-            <div class="b2-row" style="margin-bottom: 6px;">
-                <label>Difficulté du tir :</label>
-                <select id="modTir" style="flex:1; margin-left: 10px;">
-                    <option value="0">Normal (0)</option>
-                    <option value="10">Cible grande / immobile (+10)</option>
-                    <option value="-10">Cible petite / rapide / intempéries (-10)</option>
-                    <option value="-20">Longue portée / Couvert partiel (-20)</option>
-                </select>
+    <div class="b2-dialog-window">
+        ${alerteTirRapide}
+        <form class="b2-dialog">
+            
+            <div class="b2-section">
+                <div class="b2-section-title" style="color: #8c2a2a; border-bottom: 1px solid #4a1515; margin-bottom: 8px;"><i class="fas fa-crosshairs"></i> Circonstances d'Attaque</div>
+                ${isDistance ? `
+                <div class="b2-dialog-row">
+                    <label class="b2-dialog-label" for="modTir">Difficulté du tir :</label>
+                    <div class="b2-dialog-controls" style="flex: 2;">
+                        <select id="modTir" style="width: 100%;">
+                            <option value="0">Normal (0)</option>
+                            <option value="10">Cible grande / immobile (+10)</option>
+                            <option value="-10">Cible petite / rapide / intempéries (-10)</option>
+                            <option value="-20">Longue portée / Couvert partiel (-20)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="b2-dialog-row"><label class="b2-dialog-label" for="cibleConsciente">Cible consciente du tir ?</label><div class="b2-dialog-controls"><input type="checkbox" id="cibleConsciente" checked /></div></div>
+                <div class="b2-dialog-row"><label class="b2-dialog-label" for="tirMelee" style="color: #9e2a2b;">Cible dans une mêlée</label><div class="b2-dialog-controls"><input type="checkbox" id="tirMelee" /></div></div>
+                <div class="b2-dialog-row"><label class="b2-dialog-label" for="tirBoutPortant">Tir à bout portant (+20)</label><div class="b2-dialog-controls"><input type="checkbox" id="tirBoutPortant" /></div></div>
+                ` : `
+                <div class="b2-dialog-row"><label class="b2-dialog-label" for="lancerArme" style="color: #5b7b8c;">Lancer l'arme (Test de Tir)</label><div class="b2-dialog-controls"><input type="checkbox" id="lancerArme" /></div></div>
+                <div class="b2-dialog-row"><label class="b2-dialog-label" for="sansRiposte" style="color: #9e2a2b;">Cible incapable de riposter</label><div class="b2-dialog-controls"><input type="checkbox" id="sansRiposte" ${forcedSansRiposte ? 'checked disabled' : ''} /></div></div>
+                ${specs.point_faible ? `<div class="b2-dialog-row"><label class="b2-dialog-label" for="cibleAterre" style="color: #9e2a2b;">La cible est à terre (Ignore Armure)</label><div class="b2-dialog-controls"><input type="checkbox" id="cibleAterre" /></div></div>` : ''}
+                ${specs.charge ? `<div class="b2-dialog-row"><label class="b2-dialog-label" for="attaqueCharge" style="color: #9e2a2b;">Attaque en Charge (+1 Dégât)</label><div class="b2-dialog-controls"><input type="checkbox" id="attaqueCharge" /></div></div>` : ''}
+                ${specs.espace ? `<div class="b2-dialog-row"><label class="b2-dialog-label" for="espaceExigu" style="color: #9e2a2b;">Lieu étroit (Manque d'espace)</label><div class="b2-dialog-controls"><input type="checkbox" id="espaceExigu" /></div></div>` : ''}
+                ${allongeHtml}
+                `}
             </div>
-            <div class="b2-row"><label>Cible consciente du tir ?</label><input type="checkbox" id="cibleConsciente" checked /></div>
-            <div class="b2-row"><label style="color: #b71c1c;">Cible dans une mêlée (Avec allié)</label><input type="checkbox" id="tirMelee" /></div>
-            <div class="b2-row"><label>Tir engagé au corps-à-corps (+20)</label><input type="checkbox" id="tirBoutPortant" /></div>
-            ` : `
-            <div class="b2-row"><label style="color: #4a6491; font-weight: bold;">Lancer l'arme (Test de Tir)</label><input type="checkbox" id="lancerArme" /></div>
-            <div class="b2-row"><label style="color: #b71c1c;">Cible incapable de riposter</label><input type="checkbox" id="sansRiposte" /></div>
-            ${specs.point_faible ? `<div class="b2-row"><label style="color: #8b0000;">La cible est à terre (Ignore Armure)</label><input type="checkbox" id="cibleAterre" /></div>` : ''}
-            ${specs.charge ? `<div class="b2-row"><label style="color: #8b0000;">Attaque en Charge (+1 Dégât)</label><input type="checkbox" id="attaqueCharge" /></div>` : ''}
-            ${specs.espace ? `
-                <div class="form-group" style="margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
-                    <label title="Votre arme nécessite de l'espace. Cochez si vous êtes dans un lieu étroit (1 Désavantage)." style="color: #8b0000; font-weight: bold;">Lieu étroit (Manque d'espace)</label>
-                    <input type="checkbox" id="espaceExigu" />
+
+            ${talentsComboHtml !== "" ? `
+            <div class="b2-section" style="border-left: 3px solid #4a7c47; background: rgba(74, 124, 71, 0.05); padding-left: 5px; margin-bottom: 10px;">
+                <div class="b2-section-title" style="color: #4a7c47; border-bottom: 1px solid #2e4d2c; margin-bottom: 8px;"><i class="fas fa-bolt"></i> Capacités Actives</div>
+                ${talentsComboHtml}
+            </div>` : ""}
+
+            ${atoutsHtml}
+
+            <div class="b2-section">
+                <div class="b2-section-title" style="color: #8c2a2a; border-bottom: 1px solid #4a1515; margin-bottom: 8px;"><i class="fas fa-chess-knight"></i> Posture & Ruse</div>
+                
+                ${!isDistance && !hasShield ? `
+                <div class="b2-dialog-row" style="background: rgba(91, 123, 140, 0.1); border-left: 3px solid #5b7b8c;">
+                    <label class="b2-dialog-label" style="color: #7296a8;">⚔️ Combat à 2 armes :</label>
+                    <div class="b2-dialog-controls">
+                        <label style="display:flex; align-items:center; gap:4px; font-size:0.9em; cursor:pointer; color: #aaa;"><input type="checkbox" id="deuxArmesDmg" /> +1 DGT</label>
+                        <label style="display:flex; align-items:center; gap:4px; font-size:0.9em; cursor:pointer; color: #aaa;"><input type="checkbox" id="deuxArmesDef" /> +1 DEF</label>
+                    </div>
                 </div>` : ''}
-            ${allongeHtml}
-            `}
-        </div>
 
-        ${talentsComboHtml !== "" ? `
-        <div class="b2-section" style="border-color: #4CAF50; background: rgba(76, 175, 80, 0.05);">
-            <div class="b2-section-title" style="color: #2E7D32;"><i class="fas fa-bolt"></i> Capacités Actives</div>
-            ${talentsComboHtml}
-        </div>` : ""}
+                <div class="b2-dialog-row">
+                    <label class="b2-dialog-label" for="tactique">Posture de combat :</label>
+                    <div class="b2-dialog-controls" style="flex: 2;">
+                        <select id="tactique" style="width: 100%;">
+                            <option value="standard">Efficace (Standard)</option>
+                            ${!isDistance ? `
+                            <option value="force">En force (+${forIndice} DGT, 1 Désav.)</option>
+                            <option value="finesse">En finesse (DGT/2, 1 Avantage)</option>
+                            <option value="defensive">Sur la défensive (0 DGT, ${hasShield ? '3' : '2'} Avantages)</option>
+                            ` : ''}
+                            ${targetArmorType === "partielle" ? `<option value="viser5">🎯 Viser défaut (${targetArmorName}) : -5</option>` : ''}
+                            ${targetArmorType === "complete" ? `<option value="viser10">🎯 Viser défaut (${targetArmorName}) : -10</option>` : ''}
+                            ${targetArmorType === "none" ? `<option value="viser5">Viser: Armure partielle (-5)</option><option value="viser10">Viser: Armure complète (-10)</option>` : ''}
+                            <option value="viser15">Viser: Complète + 1 acc. (-15)</option>
+                            <option value="viser20">Viser: Complète + 2 acc. (-20)</option>
+                            <option value="multi">Attaques multiples (1 Désav.)</option>
+                        </select>
+                    </div>
+                </div>
 
-        ${atoutsHtml}
-
-        <div class="b2-section">
-            <div class="b2-section-title"><i class="fas fa-chess-knight"></i> Posture & Ruse</div>
-            <div class="b2-row" style="margin-bottom: 6px;">
-                <label>Posture de combat :</label>
-                <select id="tactique" style="flex:1; margin-left: 10px;">
-                    <option value="standard">Efficace (Standard)</option>
-                    ${!isDistance ? `
-                    <option value="force">En force (+${forIndice} Dégâts, 1 Désav.)</option>
-                    <option value="finesse">En finesse (Dégâts / 2, 1 Avantage)</option>
-                    <option value="defensive">Sur la défensive (0 Dégâts, ${hasShield ? '3' : '2'} Avantages)</option>
-                    ` : ''}
-                    ${targetArmorType === "partielle" ? `<option value="viser5">🎯 Viser défaut (${targetArmorName}) : -5</option>` : ''}
-                    ${targetArmorType === "complete" ? `<option value="viser10">🎯 Viser défaut (${targetArmorName}) : -10</option>` : ''}
-                    ${targetArmorType === "none" ? `
-                    <option value="viser5">Viser: Armure partielle (-5)</option>
-                    <option value="viser10">Viser: Armure complète (-10)</option>
-                    ` : ''}
-                    <option value="viser15">Viser: Complète + 1 acc. (-15)</option>
-                    <option value="viser20">Viser: Complète + 2 acc. (-20)</option>
-                    <option value="multi">Attaques multiples (1 Désav.)</option>
-                </select>
+                <div class="b2-dialog-row">
+                    <label class="b2-dialog-label" for="tenterChifoumi" style="color: #c87a32;">Tenter un Coup Tordu</label>
+                    <div class="b2-dialog-controls"><input type="checkbox" id="tenterChifoumi" /></div>
+                </div>
             </div>
-            <div class="b2-row" style="border-top: 1px dashed #ccc; padding-top: 6px;">
-                <label style="color: #8b0000; font-weight: bold;">Tenter un Coup Tordu</label>
-                <input type="checkbox" id="tenterChifoumi" />
-            </div>
-        </div>
 
-        <div class="b2-section" style="background: rgba(74, 100, 145, 0.1); border-color: #4a6491; margin-bottom: 0;">
-            <div class="b2-row" style="justify-content: center; gap: 10px;">
-                <label style="font-weight: bold; color: #4a6491;">Avantages / Désav. circonstanciels :</label>
-                <input type="number" id="advCirconstances" value="${forcedAdv}" style="width: 60px; text-align: center; border: 1px solid #4a6491; border-radius: 3px;">
+            <div class="b2-section" style="background: rgba(0,0,0,0.6); padding-bottom: 0; border: 1px solid #111;">
+                <div class="b2-dialog-row" style="justify-content: center; flex-direction: column; gap: 8px; border: none; background: transparent;">
+                    <div class="b2-dialog-label" style="text-align: center; color: #888;">Désavantages / Avantages</div>
+                    <div class="b2-dialog-controls">
+                        <div class="b2-pips" data-target="advCirconstances" style="align-items: center; gap: 4px;">
+                            <div class="b2-pip neg" data-val="-3"><i class="fas fa-times"></i></div>
+                            <div class="b2-pip neg" data-val="-2"><i class="fas fa-times"></i></div>
+                            <div class="b2-pip neg" data-val="-1"><i class="fas fa-times"></i></div>
+                            <input type="number" id="advCirconstances" value="${forcedAdv}" min="-5" max="5" style="width: 45px; height: 28px; font-size: 1.1em; margin: 0 5px;">
+                            <div class="b2-pip pos" data-val="1"><i class="fas fa-circle"></i></div>
+                            <div class="b2-pip pos" data-val="2"><i class="fas fa-circle"></i></div>
+                            <div class="b2-pip pos" data-val="3"><i class="fas fa-circle"></i></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-
-    </form>`;
+        </form>
+    </div>`;
 
     new Dialog({
         title: `Attaque avec ${weapon.name}`,
         content: dialogContent,
+        render: (html) => {
+            // Rend les cases 2 armes mutuellement exclusives
+            html.find('#deuxArmesDmg').change(function() {
+                if ($(this).is(':checked')) html.find('#deuxArmesDef').prop('checked', false);
+            });
+            html.find('#deuxArmesDef').change(function() {
+                if ($(this).is(':checked')) html.find('#deuxArmesDmg').prop('checked', false);
+            });
+
+            // --- NOUVEAU SCRIPT PIPS UNIFIÉ (+ et -) ---
+            const updatePips = (inputId) => {
+                let input = html.find(`#${inputId}`);
+                let val = parseInt(input.val()) || 0;
+                let pipsContainer = html.find(`.b2-pips[data-target="${inputId}"]`);
+                
+                pipsContainer.find('.b2-pip').each(function() {
+                    let pipVal = parseInt($(this).data('val'));
+                    $(this).removeClass('active');
+                    // Allume les positifs si valeur > 0
+                    if (val > 0 && pipVal > 0 && pipVal <= val) $(this).addClass('active');
+                    // Allume les négatifs si valeur < 0
+                    if (val < 0 && pipVal < 0 && pipVal >= val) $(this).addClass('active');
+                });
+            };
+
+            html.find('.b2-pip').click(function() {
+                let targetId = $(this).closest('.b2-pips').data('target');
+                let input = html.find(`#${targetId}`);
+                let clickedVal = parseInt($(this).data('val'));
+                let currentVal = parseInt(input.val()) || 0;
+                
+                // Si on clique sur la case déjà active au max, ça remet à 0
+                input.val(clickedVal === currentVal ? 0 : clickedVal);
+                updatePips(targetId);
+            });
+
+            html.find('.b2-dialog-controls input[type="number"]').on('input change', function() { updatePips($(this).attr('id')); });
+            html.find('.b2-pips').each(function() { updatePips($(this).data('target')); });
+        },
         buttons: {
             attaquer: {
                 icon: '<i class="fas fa-crosshairs"></i>',
@@ -270,6 +331,7 @@ export async function rollWeapon(itemId, extraOptions = {}) {
                     if (chifoumiResult === "cancel") return;
 
                     const options = {
+                        targetId: target ? target.id : null,
                         tactique: html.find('#tactique').val(), 
                         chifoumi: chifoumiResult, 
                         advC: parseInt(html.find('#advCirconstances').val()) || 0,
@@ -281,7 +343,9 @@ export async function rollWeapon(itemId, extraOptions = {}) {
                         modTir: parseInt(html.find('#modTir').val()) || 0, 
                         cibleConsciente: html.find('#cibleConsciente').is(':checked'), 
                         lancerArme: html.find('#lancerArme').is(':checked'),
-                        sansRiposte: html.find('#sansRiposte').is(':checked'),
+                        sansRiposte: forcedSansRiposte ? true : html.find('#sansRiposte').is(':checked'),
+                        isEnchainement: isEnchainement,
+                        deuxArmes: html.find('#deuxArmesDmg').is(':checked') ? "degats" : (html.find('#deuxArmesDef').is(':checked') ? "protection" : "none"),
                         replaceStat: html.find('#replaceStat').val(),
                         bonusDmgStat: html.find('#bonusDmgStat').val(),
                         bonusAllonge: html.find('#bonusAllonge').is(':checked'),
@@ -299,7 +363,7 @@ export async function rollWeapon(itemId, extraOptions = {}) {
 }
 
 export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
-    const { tactique, chifoumi, advC, hasShield, forIndice, totalBonusAtouts, tirMelee, tirBoutPortant, modTir, cibleConsciente, lancerArme, sansRiposte, replaceStat, bonusDmgStat, bonusAllonge, attaqueCharge, cibleAterre, espaceExigu } = options;
+    const { tactique, chifoumi, advC, hasShield, forIndice, totalBonusAtouts, tirMelee, tirBoutPortant, modTir, cibleConsciente, lancerArme, sansRiposte, replaceStat, bonusDmgStat, bonusAllonge, attaqueCharge, cibleAterre, espaceExigu, targetId, isEnchainement, deuxArmes } = options;
     const handicaps = this.system.handicaps || {};
     const hasTalent = (n) => this.items.some(i => i.type === "atout" && i.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(n));
     const specs = weapon.system.specificites || {};
@@ -370,7 +434,15 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
     if (tirMelee) { desavantages += 1; tactiqueLabel += " (Dans la mêlée)"; }
     if (tirBoutPortant) { score += 20; tactiqueLabel += " (Bout portant chargé)"; }
 
-    let target = Array.from(game.user.targets)[0];
+    if (deuxArmes === "degats") { degatsBonus += 1; tactiqueLabel += " (2 Armes: +1 DGT)"; }
+    else if (deuxArmes === "protection") { tactiqueLabel += " (2 Armes: +1 PROT)"; }
+
+    let target = null;
+    if (targetId) {
+        target = canvas.tokens.get(targetId); // On récupère la cible mémorisée
+    } else {
+        target = Array.from(game.user.targets)[0]; // Secours si attaque normale
+    }
     let modo = 0; let targetActor = null; let detailResistance = "";
 
     if (target) {
@@ -472,6 +544,7 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
         }
         pnjDegatsBruts = ru + targetFinalDamageNum;
         pjProtection = Number(this.system.protection?.value) || 0;
+        if (deuxArmes === "protection") pjProtection += 1;
 
     } else if (isSuccess) {
         // L'ATTAQUANT GAGNE LA PASSE
@@ -588,28 +661,41 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
             combatIsRPlus = isCrit || isMajorFail;
             
             let targetWeapon = winner.items.find(i => i.type === "arme" && i.system.equipe && i.system.type_arme !== "distance");
-            let targetFinalDamageNum = 0;
+            
+            // CRUCIAL : On écrase les variables de l'attaquant par celles du défenseur
+            finalDamageNum = 0;
+            degatsBonus = 0;
+            degatsDiviseur = 1;
+            degatsNul = false;
+
             if (targetWeapon) { 
-                targetFinalDamageNum = Number(targetWeapon.system.degats_fixe) || 0; 
-                if (targetWeapon.system.utilise_force) targetFinalDamageNum += (winner.system.stats?.for?.indice || 0); 
+                finalDamageNum = Number(targetWeapon.system.degats_fixe) || 0; 
+                // On utilise bien la force du targetActor (le défenseur)
+                if (targetWeapon.system.utilise_force) degatsBonus += (targetActor.system.stats?.for?.indice || 0); 
                 winnerSpecs = targetWeapon.system.specificites || {};
             }
             
-            if (isCrit) { 
+            let targetFinalDamageNum = finalDamageNum + degatsBonus;
+            
+            if (isCrit) { // L'attaquant fait 0 = Le défenseur profite d'une explosion
                 let explosion = await rollExplosion(); 
                 combatDegatsBruts = explosion.total + targetFinalDamageNum; 
                 combatTexteJet = explosion.texte; 
                 combatDegatsFlat = 10 + targetFinalDamageNum;
                 texteFlat = "10";
-            } else if (isMajorFail) { 
+            } else if (isMajorFail) { // Échec majeur de l'attaquant = R+ pour le défenseur
                 combatDegatsBruts = 10 + targetFinalDamageNum; 
                 combatTexteJet = "10"; 
+                combatDegatsFlat = 10 + targetFinalDamageNum;
+                texteFlat = "10";
             } else { 
                 combatDegatsBruts = ru + targetFinalDamageNum; 
                 combatTexteJet = `${ru}`; 
+                combatDegatsFlat = combatDegatsBruts;
             }
             
             combatProtection = Number(loser.system.protection?.value) || 0;
+            if (deuxArmes === "protection") combatProtection += 1;
             let ignoredProt = 0;
             for (let i of loser.items) {
                 if (i.type === "armure" && i.system.equipe) {
@@ -621,7 +707,11 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
             if (winnerSpecs.armure_div_2) { combatProtection = Math.floor(combatProtection / 2); }
         }
     }
-
+    if (isEnchainement && hasCombatWinner) {
+        combatDegatsBruts = Math.floor(combatDegatsBruts / 2);
+        combatDegatsFlat = Math.floor(combatDegatsFlat / 2);
+        armorPiercingNote = " (Enchaînement : Dgt/2)" + armorPiercingNote;
+    }
     // ==========================================
     // CRÉATION DE LA CARTE DE CHAT
     // ==========================================
@@ -677,30 +767,55 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
             <button class="resolve-tie-btn" data-type="frappe" data-payload="${safePayloadTie}" style="width: 100%; background: #b71c1c; color: #fff; border: none; padding: 5px; cursor: pointer; font-weight: bold; border-radius: 3px;"><i class="fas fa-tint"></i> Frappe croisée (Blessures simultanées)</button>
         </div>`;
     } else if (hasCombatWinner && loser) {
-        let optionsHtmlBase = `
-            <option value="blesser" selected>🗡️ Blesser (Appliquer les dégâts)</option>
+        
+        // 1. EFFET DE BASE
+        let optionsHtmlBase = `<option value="blesser" selected>🗡️ Blesser (Appliquer les dégâts)</option>`;
+        if (!isDistance) {
+            optionsHtmlBase += `
             <option value="bousculer">🛡️ Bousculer (Mettre à terre / Repousser)</option>
             <option value="desengager">💨 Désengager (Fuir la mêlée)</option>
-        `;
+            `;
+        }
+
+        let useAdvancedEffects = game.settings.get("brigandyne2appv2", "advancedCombatEffects");
+
+        // 2. DEUXIÈME EFFET (Bonus)
         let optionsHtmlBonus = `
             <option value="none" selected>-- Choisissez un 2ème effet --</option>
             ${isCrit ? '<option value="devastateur" style="color: #b71c1c; font-weight: bold;">💥 Coup Dévastateur (Dégâts Explosifs !)</option>' : ''}
             <option value="blesser">🗡️ Blesser (Si non pris au-dessus)</option>
+        `;
+
+        if (!isDistance) {
+            optionsHtmlBonus += `
             <option value="bousculer">🛡️ Bousculer</option>
             <option value="desengager">💨 Désengager</option>
+            `;
+        }
+
+        // 3. EFFETS AVANCÉS
+        if (useAdvancedEffects) {
+            optionsHtmlBonus += `
             <optgroup label="Effets Spéciaux">
                 <option value="choc">💫 Choc (Cible Sonnée)</option>
                 <option value="precision">🎯 Précision (Ignore l'armure)</option>
-                <option value="puissance">💪 Puissance (+1 Dégât)</option>
+                <option value="puissance">💪 Puissance (+1 Dégât)</option>`;
+            
+            // Le coup latéral n'apparaît qu'au corps-à-corps
+            if (!isDistance) {
+                optionsHtmlBonus += `
                 <option value="lateral">🔄 Coup latéral (Dégâts à cible adjacente)</option>
+                <option value="immobilisation">🤼 Immobilisation (Test FOR/FOR)</option>`;
+            }
+
+            optionsHtmlBonus += `
                 <option value="handicapant">🦵 Coup handicapant (Cible Ralentie)</option>
                 <option value="illegal">👁️ Coup illégal (Cible Affaiblie)</option>
                 <option value="desarmement">⚔️ Désarmement (Lâche son arme)</option>
                 <option value="enchainement">⚡ Enchaînement (Attaque suppl. Dégâts/2)</option>
                 <option value="saignement">🩸 Saignement (Cible Ensanglantée)</option>
-                <option value="immobilisation">🤼 Immobilisation (Test FOR/FOR)</option>
-            </optgroup>
-        `;
+            </optgroup>`;
+        }
 
         let payload = {
             winnerId: winner.uuid,
@@ -770,16 +885,56 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
     
     ChatMessage.create({ user: game.user._id, speaker: ChatMessage.getSpeaker({ actor: this }), content: content, rolls: [roll] });
 
-    if (isSuccess && (forcedResult === null || forcedResult === false)) {
-        let acts = weapon.system.activities || {}; let actKeys = Object.keys(acts);
-        if (actKeys.length === 1) { 
-            this.useActivity(weapon.id, actKeys[0], ru); 
-        } else if (actKeys.length > 1) {
-            let buttons = {}; 
-            for (let k of actKeys) { 
-                buttons[k] = { icon: '<i class="fas fa-bolt"></i>', label: acts[k].nom, callback: () => this.useActivity(weapon.id, k, ru) }; 
+    // ON VÉRIFIE SI QUELQU'UN A GAGNÉ (Attaquant ou Défenseur)
+    if (hasCombatWinner && (forcedResult === null || forcedResult === false)) {
+        
+        let winningWeapon = null;
+        let winningActor = winner;
+
+        if (winner.id === this.id) {
+            winningWeapon = weapon; // C'est l'attaquant
+        } else {
+            // C'est le défenseur, on cherche son arme
+            winningWeapon = winner.items.find(i => i.type === "arme" && i.system.equipe && i.system.type_arme !== "distance");
+        }
+
+        if (winningWeapon) {
+            let acts = winningWeapon.system.activities || {}; 
+            let actKeys = Object.keys(acts);
+            
+            // LA RUSE : Fonction qui redirige la cible temporairement
+            const triggerActivity = async (weaponId, actKey, ruScore) => {
+                let originalTargets = Array.from(game.user.targets);
+                
+                // Si c'est une riposte, on force le ciblage sur l'attaquant (this)
+                if (winner.id !== this.id) {
+                    let loserTokens = this.getActiveTokens(); // Les tokens du PJ
+                    if (loserTokens.length > 0) {
+                        originalTargets.forEach(t => t.setTarget(false, { user: game.user, releaseOthers: false }));
+                        loserTokens[0].setTarget(true, { user: game.user, releaseOthers: false });
+                    }
+                }
+                
+                // On lance l'activité (qui frappera maintenant la bonne cible)
+                await winningActor.useActivity(weaponId, actKey, ruScore);
+                
+                // On nettoie et on remet le ciblage d'origine en douce
+                if (winner.id !== this.id) {
+                    let loserTokens = this.getActiveTokens();
+                    if (loserTokens.length > 0) loserTokens[0].setTarget(false, { user: game.user, releaseOthers: false });
+                    originalTargets.forEach(t => t.setTarget(true, { user: game.user, releaseOthers: false }));
+                }
+            };
+
+            if (actKeys.length === 1) { 
+                triggerActivity(winningWeapon.id, actKeys[0], ru); 
+            } else if (actKeys.length > 1) {
+                let buttons = {}; 
+                for (let k of actKeys) { 
+                    buttons[k] = { icon: '<i class="fas fa-bolt"></i>', label: acts[k].nom, callback: () => triggerActivity(winningWeapon.id, k, ru) }; 
+                }
+                new Dialog({ title: `⚡ Capacité de ${winningWeapon.name}`, content: `<p style="text-align: center;">Voulez-vous déclencher l'effet de l'arme ?</p>`, buttons: buttons }).render(true);
             }
-            new Dialog({ title: `⚡ Capacité de ${weapon.name}`, content: `<p style="text-align: center;">L'attaque a fait mouche ! Voulez-vous déclencher un effet d'arme ?</p>`, buttons: buttons }).render(true);
         }
     }
 }
