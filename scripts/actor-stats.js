@@ -7,55 +7,122 @@ export async function rollStat(statKey) {
             statOptions += `<option value="${k}" ${k === statKey ? 'selected' : ''}>${s.label}</option>`;
         }
 
+        // --- GRILLE DES ATOUTS (SANG & ACIER - THÈME LAITON) ---
         const relevantAtouts = this.items.filter(i => i.type === "atout" && i.system.stat_liee === statKey);
         let atoutsHtml = "";
         if (relevantAtouts.length > 0) {
-            atoutsHtml = `<div style="margin-bottom: 12px; background: rgba(212, 175, 55, 0.05); padding: 5px; border: 1px dashed #d4af37; border-radius: 3px;"><div style="font-weight: bold; color: #8b6d05; font-size: 0.85em; margin-bottom: 4px; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 2px;">Spécialités & Talents :</div><div style="display: flex; flex-direction: column; gap: 2px;">`;
+            atoutsHtml = `<div class="b2-section" style="border-left: 3px solid #a68a24; background: rgba(166, 138, 36, 0.05); padding-left: 5px; margin-bottom: 10px;">
+                <div class="b2-section-title" style="color: #a68a24; border-bottom: 1px solid #5c4d16; margin-bottom: 8px;"><i class="fas fa-star"></i> Talents & Spécialités</div>`;
             for (let a of relevantAtouts) {
                 const bonus = Number(a.system.bonus) || 0;
-                const effetText = a.system.effet ? ` - <span style="color: #555;">${a.system.effet}</span>` : "";
+                let rawEffet = a.system.effet || "";
+                let shortEffet = rawEffet.length > 45 ? rawEffet.substring(0, 42) + "..." : rawEffet;
+
                 if (bonus > 0) {
-                    atoutsHtml += `<label style="display: flex; align-items: baseline; gap: 4px; cursor: pointer; font-size: 0.8em; line-height: 1.2; margin: 0; font-weight: normal; color: #111;"><input type="checkbox" class="atout-bonus" value="${bonus}" title="${a.system.effet}" style="margin: 0; width: 12px; height: 12px; transform: translateY(2px);"/><span><strong>${a.name} (+${bonus})</strong>${effetText}</span></label>`;
+                    atoutsHtml += `
+                    <div class="b2-dialog-row">
+                        <label class="b2-dialog-label" style="cursor: pointer; display: flex; flex-direction: column;">
+                            <span style="font-weight: bold; color: #a68a24;">${a.name} (+${bonus})</span>
+                            <span style="font-size: 0.8em; color: #777; font-style: italic; font-weight: normal;">${shortEffet}</span>
+                        </label>
+                        <div class="b2-dialog-controls"><input type="checkbox" class="atout-bonus" value="${bonus}" title="${rawEffet}" /></div>
+                    </div>`;
                 } else {
-                    atoutsHtml += `<div style="padding-left: 16px; font-size: 0.8em; color: #333; line-height: 1.2; margin: 0;"><strong>${a.name}</strong> (Talent)${effetText}</div>`;
+                    atoutsHtml += `
+                    <div class="b2-dialog-row" style="opacity: 0.7;">
+                        <div class="b2-dialog-label" style="display: flex; flex-direction: column;">
+                            <span style="font-weight: bold; color: #888;">${a.name}</span>
+                            <span style="font-size: 0.8em; color: #555; font-style: italic; font-weight: normal;">${shortEffet}</span>
+                        </div>
+                    </div>`;
                 }
             }
-            atoutsHtml += `</div></div>`;
+            atoutsHtml += `</div>`;
         }
 
+        // --- CONTENU DE LA FENÊTRE ---
         let dialogContent = `
-        <form>
-            ${target ? `
-            <div class="form-group" style="margin-bottom: 15px; background: rgba(139, 0, 0, 0.05); padding: 5px; border: 1px dashed #8b0000; border-radius: 3px;">
-                <label style="font-weight: bold; color: #8b0000;">Opposition face à ${target.name} :</label>
-                <select id="targetStat" style="width: 100%; margin-top: 5px;">${statOptions}</select>
-            </div>` : ''}
-            ${atoutsHtml} 
-            <div class="form-group" style="margin-bottom: 15px;">
-                <label style="font-weight: bold; color: #111;">Difficulté :</label>
-                <select id="difficulte" style="width: 100%; padding: 3px;">
-                    <option value="40">+40 Triviale</option>
-                    <option value="30">+30 Simple</option>
-                    <option value="20">+20 Aisée</option>
-                    <option value="10">+10 Faisable</option>
-                    <option value="0" selected>0 Assez difficile (test sec)</option>
-                    <option value="-10">-10 Difficile</option>
-                    <option value="-20">-20 Ardue</option>
-                    <option value="-30">-30 Complexe</option>
-                    <option value="-40">-40 Infaisable</option>
-                </select>
-            </div>
-        </form>`;
+        <div class="b2-dialog-window">
+            <form class="b2-dialog">
+                ${target ? `
+                <div class="b2-section" style="border-left: 3px solid #8c2a2a; margin-bottom: 10px;">
+                    <div class="b2-dialog-row">
+                        <label class="b2-dialog-label" style="color: #9e2a2b;"><i class="fas fa-crosshairs"></i> Opposition face à ${target.name} :</label>
+                        <div class="b2-dialog-controls" style="flex: 2;">
+                            <select id="targetStat" style="width: 100%;">${statOptions}</select>
+                        </div>
+                    </div>
+                </div>` : ''}
+                
+                ${atoutsHtml}
+                
+                <div class="b2-section" style="background: rgba(0,0,0,0.6); padding-bottom: 0; border: 1px solid #111;">
+                    <div class="b2-dialog-row" style="justify-content: center; flex-direction: column; gap: 8px; border: none; background: transparent;">
+                        <div class="b2-dialog-label" style="text-align: center; color: #888;">Difficulté / Facilité</div>
+                        <div class="b2-dialog-controls">
+                            <div class="b2-pips" data-target="modDifficulte" style="align-items: center; gap: 4px;">
+                                <div class="b2-pip neg" data-val="-40"><i class="fas fa-minus"></i></div>
+                                <div class="b2-pip neg" data-val="-30"><i class="fas fa-minus"></i></div>
+                                <div class="b2-pip neg" data-val="-20"><i class="fas fa-minus"></i></div>
+                                <div class="b2-pip neg" data-val="-10"><i class="fas fa-minus"></i></div>
+                                <input type="number" id="modDifficulte" value="0" step="10" min="-40" max="40" style="width: 55px; height: 28px; font-size: 1.1em; margin: 0 5px;">
+                                <div class="b2-pip pos" data-val="10"><i class="fas fa-plus"></i></div>
+                                <div class="b2-pip pos" data-val="20"><i class="fas fa-plus"></i></div>
+                                <div class="b2-pip pos" data-val="30"><i class="fas fa-plus"></i></div>
+                                <div class="b2-pip pos" data-val="40"><i class="fas fa-plus"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>`;
 
         new Dialog({
             title: `Test de ${stat.label}`,
             content: dialogContent,
+            render: (html) => {
+            // --- NOUVEAU SCRIPT PIPS UNIFIÉ (+ et -) ---
+            const updatePips = (inputId) => {
+                let input = html.find(`#${inputId}`);
+                let val = parseInt(input.val()) || 0;
+                let pipsContainer = html.find(`.b2-pips[data-target="${inputId}"]`);
+                
+                pipsContainer.find('.b2-pip').each(function() {
+                    let pipVal = parseInt($(this).data('val'));
+                    $(this).removeClass('active');
+                    // Allume les positifs si valeur > 0
+                    if (val > 0 && pipVal > 0 && pipVal <= val) $(this).addClass('active');
+                    // Allume les négatifs si valeur < 0
+                    if (val < 0 && pipVal < 0 && pipVal >= val) $(this).addClass('active');
+                });
+            };
+
+            html.find('.b2-pip').click(function() {
+                let targetId = $(this).closest('.b2-pips').data('target');
+                let input = html.find(`#${targetId}`);
+                let clickedVal = parseInt($(this).data('val'));
+                let currentVal = parseInt(input.val()) || 0;
+                
+                // Si on clique sur la case déjà active au max, ça remet à 0
+                input.val(clickedVal === currentVal ? 0 : clickedVal);
+                updatePips(targetId);
+            });
+
+            html.find('.b2-dialog-controls input[type="number"]').on('input change', function() { 
+                updatePips($(this).attr('id')); 
+            });
+            
+            html.find('.b2-pips').each(function() { 
+                updatePips($(this).data('target')); 
+            });
+            // --- FIN DU SCRIPT PIPS ---
+            },
             buttons: {
                 roll: {
                     icon: '<i class="fas fa-dice-d20"></i>',
                     label: target ? "Jet d'Opposition" : "Jet Standard",
                     callback: async (html) => {
-                        const modDifficulte = parseInt(html.find('#difficulte').val()) || 0;
+                        const modDifficulte = parseInt(html.find('#modDifficulte').val()) || 0;
                         const targetStatKey = target ? html.find('#targetStat').val() : null;
                         let totalBonusAtouts = 0;
                         html.find('.atout-bonus:checked').each(function() { totalBonusAtouts += Number($(this).val()); });
