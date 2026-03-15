@@ -52,6 +52,7 @@ export class PersonnageData extends foundry.abstract.TypeDataModel {
                 tir: new SchemaField({ value: new NumberField({ initial: 0, integer: true }), progression: new NumberField({ initial: 0, integer: true }), label: new StringField({ initial: "Tir" }) }),
                 vol: new SchemaField({ value: new NumberField({ initial: 0, integer: true }), progression: new NumberField({ initial: 0, integer: true }), label: new StringField({ initial: "Volonté" }) })
             }),
+            stat_magie_defaut: new StringField({ initial: "mag" }),
             vitalite: new ObjectField({ initial: { value: 0, max: 0 } }),
             sangfroid: new ObjectField({ initial: { value: 0, max: 0 } }),
             destin: new ObjectField({ initial: { value: 0, max: 0 } }),
@@ -85,6 +86,7 @@ export class PnjData extends foundry.abstract.TypeDataModel {
                 tir: new SchemaField({ value: new NumberField({ initial: 30, integer: true }), label: new StringField({ initial: "Tir" }) }),
                 vol: new SchemaField({ value: new NumberField({ initial: 30, integer: true }), label: new StringField({ initial: "Volonté" }) })
             }),
+            stat_magie_defaut: new StringField({ initial: "mag" }),
             vitalite: new ObjectField({ initial: { value: 0, max: 0 } }),
             sangfroid: new ObjectField({ initial: { value: 0, max: 0 } }),
             options: new ObjectField({ initial: { malus_armure: true } }),
