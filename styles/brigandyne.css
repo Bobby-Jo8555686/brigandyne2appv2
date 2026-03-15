@@ -507,3 +507,131 @@ body.vtt {
     font-weight: bold; font-size: 0.9em; color: #ffcccc; display: block; margin-bottom: 5px;
     text-transform: uppercase; font-family: 'Georgia', serif;
 }
+/* ==========================================
+   BOÎTES DE DIALOGUE SANG & ACIER (JETS)
+========================================== */
+/* La ligne (Séparateur 3D biseauté) */
+.b2-dialog-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 10px; margin-bottom: 3px;
+    background: rgba(0, 0, 0, 0.55); 
+    border-top: 1px solid rgba(255, 255, 255, 0.03); 
+    border-bottom: 1px solid #0a0a0a; 
+    border-radius: 2px;
+}
+
+/* Le texte à gauche */
+.b2-dialog-label {
+    flex: 1;
+    font-family: 'Georgia', serif;
+    font-weight: bold;
+    color: #e0e0e0;
+    font-size: 0.95em;
+    text-shadow: 1px 1px 2px black;
+}
+
+/* Le conteneur de droite (Input + Cases) */
+.b2-dialog-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Le champ chiffré */
+.b2-dialog-controls input[type="number"] {
+    width: 35px;
+    height: 24px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.8) !important;
+    border: 1px solid #555 !important;
+    color: #fff !important;
+    font-weight: bold;
+    border-radius: 3px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
+}
+
+/* La jauge de cases (Pips) */
+.b2-pips {
+    display: flex;
+    gap: 2px;
+}
+
+/* Une case individuelle */
+.b2-pip {
+    width: 22px;
+    height: 22px;
+    border: 1px solid #444;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.7em;
+    color: #555;
+    transition: all 0.15s ease-in-out;
+}
+
+.b2-pip:hover { border-color: #888; color: #888; transform: scale(1.1); }
+
+/* Case Active POSITIVE (Vert / Acier clair) */
+.b2-pip.pos.active {
+    background: rgba(46, 125, 50, 0.3);
+    border-color: #4CAF50;
+    color: #4CAF50;
+    box-shadow: 0 0 5px rgba(46, 125, 50, 0.5);
+}
+
+/* Case Active NÉGATIVE (Rouge Sang) */
+.b2-pip.neg.active {
+    background: rgba(183, 28, 28, 0.3);
+    border-color: #ff5252;
+    color: #ff5252;
+    box-shadow: 0 0 5px rgba(183, 28, 28, 0.5);
+}
+/* ==========================================
+   STYLE UNIFIÉ DES BOÎTES DE DIALOGUE
+========================================== */
+.b2-dialog-window {
+    background: #151515; 
+    color: #c0c0c0; 
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #222;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.9); 
+}
+
+.b2-dialog-row input[type="checkbox"] {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #555;
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
+}
+
+.b2-dialog-row input[type="checkbox"]:checked {
+    background: #8b0000;
+    border-color: #ff5252;
+}
+
+.b2-dialog-row input[type="checkbox"]:checked::after {
+    content: '✔';
+    color: #fff;
+    position: absolute;
+    top: -1px; left: 3px;
+    font-size: 14px;
+}
+
+.b2-dialog-row select {
+    background: rgba(0,0,0,0.8) !important;
+    color: #fff !important;
+    border: 1px solid #555 !important;
+    padding: 4px;
+    border-radius: 3px;
+    font-family: inherit;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
+}
