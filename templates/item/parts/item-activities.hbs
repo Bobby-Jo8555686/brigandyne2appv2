@@ -1,0 +1,108 @@
+<div class="activities-tab" style="padding: 10px;">
+    
+    <div class="text-right mb-15">
+        <a class="btn-action btn-blue" data-action="addActivity">
+            <i class="fas fa-plus"></i> Nouvelle Activité
+        </a>
+    </div>
+
+    {{#each system.activities as |act id|}}
+    <div class="activity-block">
+        
+        <div class="activity-header">
+            <input type="text" class="act-input activity-name-input flex-1" data-index="{{id}}" data-field="nom" value="{{act.nom}}" placeholder="Nom de l'action...">
+            <a class="delete-btn" data-action="deleteActivity" data-id="{{id}}" title="Supprimer cette activité"><i class="fas fa-trash"></i></a>
+        </div>
+        
+        <div class="flex-row gap-10 mb-10 align-stretch">
+            <div class="flex-1">
+                <label class="font-bold text-muted font-085">Type d'action</label>
+                <select class="act-input w-100" data-index="{{id}}" data-field="type">
+                    {{selectOptions ../choixTypeActivite selected=act.type}}
+                </select>
+            </div>
+            <div class="flex-row gap-5 flex-1">
+                <div class="flex-1">
+                    <label class="font-bold text-muted font-085">Coût</label>
+                    <input type="number" class="act-input w-100 text-center" data-index="{{id}}" data-field="cout.valeur" value="{{act.cout.valeur}}">
+                </div>
+                <div class="flex-2">
+                    <label class="font-bold text-muted font-085">Ressource</label>
+                    <select class="act-input w-100" data-index="{{id}}" data-field="cout.ressource">
+                        {{selectOptions ../choixRessource selected=act.cout.ressource}}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-row gap-10 box-resource mb-10">
+            <div class="flex-1 flex-row align-center gap-5 px-5">
+                <label class="font-bold font-085 color-light" style="white-space: nowrap;">Utilisations :</label>
+                <input type="number" class="act-input text-center" data-index="{{id}}" data-field="utilisations.value" value="{{act.utilisations.value}}" style="width: 40px;">
+                <span class="font-bold color-light">/</span>
+                <input type="number" class="act-input text-center" data-index="{{id}}" data-field="utilisations.max" value="{{act.utilisations.max}}" style="width: 40px;">
+            </div>
+            <div class="flex-1 flex-row align-center gap-5 px-5">
+                <label class="font-bold font-085 color-light" style="white-space: nowrap;">Recharge :</label>
+                <select class="act-input w-100" data-index="{{id}}" data-field="utilisations.frequence">
+                    <option value="toujours" {{#if (eq act.utilisations.frequence "toujours")}}selected{{/if}}>À volonté</option>
+                    <option value="combat" {{#if (eq act.utilisations.frequence "combat")}}selected{{/if}}>Par Combat</option>
+                    <option value="jour" {{#if (eq act.utilisations.frequence "jour")}}selected{{/if}}>Par Jour</option>
+                    <option value="session" {{#if (eq act.utilisations.frequence "session")}}selected{{/if}}>Par Scène</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="border-top pt-10 mt-10">
+            <span class="activity-section-title">Effets Mécaniques</span>
+            
+            <div class="flex-row gap-10 mb-10 mt-5">
+                <div class="flex-1">
+                    <label class="font-08 text-muted" title="Variables supportées: RU, @for, @mou, etc.">Formule ou Dégâts</label>
+                    <input type="text" class="act-input w-100" data-index="{{id}}" data-field="effet.degats" value="{{act.effet.degats}}" placeholder="ex: RU + @for + 2">
+                </div>
+                <div class="flex-1">
+                    <label class="font-08 text-muted">État infligé</label>
+                    <select class="act-input w-100" data-index="{{id}}" data-field="effet.applique_etat">
+                        {{selectOptions ../choixEtats selected=act.effet.applique_etat}}
+                    </select>
+                </div>
+            </div>
+
+            {{#if (eq act.type "buff")}}
+            <div class="form-group box-green mb-10">
+                <label class="title-green font-bold">Modifier une Caractéristique</label>
+                <div class="flex-row gap-10 mt-5">
+                    <div class="flex-2">
+                        <select class="act-input w-100" data-index="{{id}}" data-field="effet.buff.stat">
+                            {{selectOptions ../choixStats selected=act.effet.buff.stat}}
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <input type="number" class="act-input w-100 text-center" data-index="{{id}}" data-field="effet.buff.valeur" value="{{act.effet.buff.valeur}}" placeholder="+/-">
+                    </div>
+                </div>
+            </div>
+            {{/if}}
+            
+            <div class="flex-row gap-10 box-orange mt-10">
+                <div class="flex-2">
+                    <label class="font-08 title-orange font-bold">Sauvegarde de la cible (Annule l'effet)</label>
+                    <select class="act-input w-100" data-index="{{id}}" data-field="effet.sauvegarde.stat">
+                        {{selectOptions ../choixStats selected=act.effet.sauvegarde.stat}}
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="font-08 title-orange font-bold">Modificateur</label>
+                    <input type="number" class="act-input w-100 text-center" data-index="{{id}}" data-field="effet.sauvegarde.mod" value="{{act.effet.sauvegarde.mod}}" placeholder="ex: 10 ou -10">
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {{else}}
+    <div class="empty-list mt-10">
+        Cet objet n'a pas encore de capacités actives.<br>Ajoutez une activité pour l'utiliser en jeu (Attaque, sort, talent...)
+    </div>
+    {{/each}}
+</div>

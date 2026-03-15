@@ -1,0 +1,94 @@
+<header class="sheet-header-actor flex-row gap-20 mb-15">
+    
+    <img class="actor-profile-img cursor-pointer" src="{{actor.img}}" data-action="editImage" data-edit="img" title="{{actor.name}}"/>
+    
+    <a class="lock-btn" data-action="toggleLock" title="Verrouiller/Déverrouiller la fiche">
+    {{#if isLocked}}
+        <i class="fas fa-lock" style="color: #8b0000;"></i>
+    {{else}}
+        <i class="fas fa-lock-open" style="color: #4CAF50;"></i>
+    {{/if}}
+    </a>
+    
+    <div class="header-bio flex-1 flex-col gap-5">
+        <div class="bio-line flex-row align-center">
+            <label class="bio-label">Nom, surnom</label>
+            <input class="bio-input charname flex-1" name="name" type="text" value="{{actor.name}}"/>
+        </div>
+        
+        {{#if (eq actor.type "personnage")}}
+        <div class="bio-line flex-row align-center">
+            <label class="bio-label">Peuple, sang</label>
+            <input class="bio-input-readonly flex-1" type="text" value="{{#each origines}}{{name}}{{/each}}" readonly/>
+        </div>
+        <div class="bio-line flex-row align-center">
+            <label class="bio-label">Archétype</label>
+            <input class="bio-input-readonly flex-1" type="text" value="{{#each archetypes}}{{name}}{{/each}}" readonly/>
+        </div>
+        <div class="bio-line flex-row align-center">
+            <label class="bio-label">Carrière(s)</label>
+            <input class="bio-input-readonly flex-1" type="text" value="{{#each carrieres}}{{name}} {{/each}}" readonly/>
+        </div>
+
+        <div class="header-resources border-top pt-10 mt-10">
+            <div class="resource-box vit">
+                <label>VIT:</label>
+                <input type="number" name="system.vitalite.value" value="{{system.vitalite.value}}"/>
+                <span>/ {{system.vitalite.max}}</span>
+            </div>
+            <div class="resource-box sf">
+                <label>SF:</label>
+                <input type="number" name="system.sangfroid.value" value="{{system.sangfroid.value}}"/>
+                <span>/ {{system.sangfroid.max}}</span>
+            </div>
+            <div class="resource-box des">
+                <label>DES:</label>
+                <input type="number" name="system.destin.value" value="{{system.destin.value}}"/>
+                <span>/ {{system.destin.max}}</span>
+            </div>
+            <div class="resource-box px">
+                <label class="cursor-pointer" data-action="spendXp" title="Dépenser de l'Expérience">PX:</label>
+                <input type="number" name="system.experience.value" value="{{system.experience.value}}"/>
+            </div>
+        </div>
+        {{else}}
+        
+        <div class="bio-line flex-row align-center">
+            <label class="bio-label">Type de PNJ</label>
+            <select class="bio-input flex-1" name="system.type_pnj">
+                {{selectOptions pnjTypes selected=system.type_pnj blank="- Choisissez -"}}
+            </select>
+        </div>
+        <div class="header-resources border-top pt-10 mt-10">
+            <div class="resource-box vit">
+                <label>VIT:</label>
+                <input type="number" name="system.vitalite.value" value="{{system.vitalite.value}}"/>
+                <span>/ {{system.vitalite.max}}</span>
+            </div>
+            <div class="resource-box sf">
+                <label>SF:</label>
+                <input type="number" name="system.sangfroid.value" value="{{system.sangfroid.value}}"/>
+                <span>/ {{system.sangfroid.max}}</span>
+            </div>
+        </div>
+        {{/if}}
+    </div>
+
+    <div class="header-stats">
+        <div class="combat-box init">
+            <label class="roll-init" data-action="rollInit" title="Lancer l'Initiative">Initiative</label>
+            <span>{{system.initiative.value}}</span>
+        </div>
+        <div class="combat-box prot">
+            <label>Protection</label>
+            <span>{{system.protection.value}}</span>
+        </div>
+        <div class="malus-armure text-center mt-5">
+            <label class="handicap-label justify-center cursor-pointer">
+                <input type="checkbox" name="system.options.malus_armure" {{checked system.options.malus_armure}}/>
+                Malus d'armures
+            </label>
+        </div>
+    </div>
+    
+</header>

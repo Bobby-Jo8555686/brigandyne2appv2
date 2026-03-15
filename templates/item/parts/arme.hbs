@@ -1,0 +1,151 @@
+<div class="tab details" data-tab="details" style="display:block;">
+    <div class="item-grid">
+        <div class="form-group-item">
+            <label>Équipée</label>
+            <input type="checkbox" name="system.equipe" {{checked system.equipe}}/>
+        </div>
+        <div class="form-group-item">
+            <label>Type d'arme</label>
+            <select name="system.type_arme">
+                {{selectOptions choixTypeArme selected=system.type_arme}}
+            </select>
+        </div>
+        {{!-- AFFICHAGE POUR LA MÊLÉE --}}
+        {{#if (eq system.type_arme "melee")}}
+        <div class="form-group-item">
+            <label title="Détermine la priorité en mêlée et la facilité de dissimulation">Allonge</label>
+            <select name="system.allonge">
+                {{selectOptions choixAllonge selected=system.allonge}}
+            </select>
+        </div>
+        {{/if}}
+
+        {{!-- AFFICHAGE POUR LA DISTANCE --}}
+        {{#if (eq system.type_arme "distance")}}
+        <div class="form-group-item">
+            <label title="Distance d'efficacité de l'arme">Portée</label>
+            <select name="system.portee">
+                {{selectOptions choixPortee selected=system.portee}}
+            </select>
+        </div>
+        {{/if}}
+        <div class="form-group-item" style="display: flex; align-items: center; justify-content: space-between;">
+            <label title="Ajoute l'indice de Force aux dégâts de base">Ajoute la FOR</label>
+            <input type="checkbox" name="system.utilise_force" {{checked system.utilise_force}} style="margin: 0;"/>
+        </div>
+        <div class="form-group-item">
+            <label>Dégâts de l'arme</label>
+            <input type="number" name="system.degats_fixe" value="{{system.degats_fixe}}"/>
+        </div>
+        <div class="form-group-item">
+            <label title="L'arme pénalise l'Initiative de ce montant">Initiative (-x)</label>
+            <input type="number" name="system.malus_init" value="{{system.malus_init}}"/>
+        </div>
+        <div class="form-group-item">
+            <label>Mains (Prise)</label>
+            <select name="system.mains">
+                {{selectOptions choixMains selected=system.mains}}
+            </select>
+        </div>
+        
+        <div class="form-group-item col" style="grid-column: span 2;">
+            <label>Notes (Spécial)</label>
+            <input type="text" name="system.special" value="{{system.special}}" placeholder="Détails supplémentaires..."/>
+        </div>
+    </div>
+
+    <div class="item-header grey mt-10" style="background: rgba(0,0,0,0.1); padding: 5px; border-radius: 3px; border-bottom: 2px solid #8b0000;">
+        <h3 class="item-title" style="margin: 0; color: #8b0000; font-family: 'Georgia', serif; font-size: 1.1em;">Spécificités de l'arme</h3>
+    </div>
+    
+    {{!-- ⚔️ AFFICHAGE SI ARME DE MÊLÉE --}}
+    {{#if (eq system.type_arme "melee")}}
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; font-size: 0.85em; color: #111;">
+        <label title="Désarçonne sur passe gagnée. Dégâts = chute." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.anti_cavalier" {{checked system.specificites.anti_cavalier}}> Anti-cavalier
+        </label>
+        <label title="Divise l'armure de la cible par 2." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.armure_div_2" {{checked system.specificites.armure_div_2}}> Armure / 2
+        </label>
+        <label title="Coince l'arme sur R+. Désarmer ou test FOR 0 pour casser." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.brise_lames" {{checked system.specificites.brise_lames}}> Brise-lames
+        </label>
+        <label title="+1 dégât (+2 total) en charge." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.charge" {{checked system.specificites.charge}}> Charge
+        </label>
+        <label title="Cible Sonnée = test END avec 1 Désavantage." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.choc" {{checked system.specificites.choc}}> Choc
+        </label>
+        <label title="Utilisable collé malgré son allonge (A, B ou C)." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.corps_a_corps" {{checked system.specificites.corps_a_corps}}> Corps-à-corps
+        </label>
+        <label title="Les dégâts infligés disparaissent après 1h." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.degats_temporaires" {{checked system.specificites.degats_temporaires}}> Dégâts temporaires
+        </label>
+        <label title="-1 Protection ennemie à chaque passe gagnée." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.destruction" {{checked system.specificites.destruction}}> Destruction
+        </label>
+        <label title="Besoin de 1m50. 1 Désavantage en lieu étroit." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.espace" {{checked system.specificites.espace}}> Espace
+        </label>
+        <label title="Se casse sur un doublé aux dés." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.fragile" {{checked system.specificites.fragile}}> Fragile
+        </label>
+        <label title="Cuir/Mailles = Protection 0." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.ignore_armures_souples" {{checked system.specificites.ignore_armures_souples}}> Ignore armures souples
+        </label>
+        <label title="Boucliers = Protection 0." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.ignore_boucliers" {{checked system.specificites.ignore_boucliers}}> Ignore boucliers
+        </label>
+        <label title="Sur une R+, immobilise sans infliger de dégâts." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.immobilisation" {{checked system.specificites.immobilisation}}> Immobilisation
+        </label>
+        <label title="Ignore armure si cible à terre." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.point_faible" {{checked system.specificites.point_faible}}> Point faible
+        </label>
+        <label title="1 seule dose de poison requise au lieu de 3." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.poison" {{checked system.specificites.poison}}> Empoisonnement facile
+        </label>
+        <label title="Doublé = vous encaissez FOR en dégâts." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.risquee" {{checked system.specificites.risquee}}> Risquée
+        </label>
+        <label title="Permet de saisir, immobiliser, étrangler ou projeter (test FOR/FOR)." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.saisie" {{checked system.specificites.saisie}}> Saisie
+        </label>
+    </div>
+    {{/if}}
+
+    {{!-- 🏹 AFFICHAGE SI ARME À DISTANCE --}}
+    {{#if (eq system.type_arme "distance")}}
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; font-size: 0.85em; color: #111;">
+        <label title="L'adversaire qui subit l'effet Choc teste son END avec 1 Désavantage." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.assommante" {{checked system.specificites.assommante}}> Assommante
+        </label>
+        <label title="La valeur de protection de l'armure adverse est divisée par deux." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.armure_div_2" {{checked system.specificites.armure_div_2}}> Armure / 2
+        </label>
+        <label title="L'arme est facile d'utilisation. Donne un bonus au test de TIR." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.maniable" {{checked system.specificites.maniable}}> Maniable
+        </label>
+        <label title="L'arme inflige un malus au test de TIR." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.peu_precise" {{checked system.specificites.peu_precise}}> Peu précise
+        </label>
+        <label title="Lente à recharger. Il faut y consacrer deux tours avant de tirer à nouveau." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.lente_2" {{checked system.specificites.lente_2}}> Lente (2 tours)
+        </label>
+        <label title="Très lente à recharger. Il faut y consacrer cinq tours avant de tirer à nouveau." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.lente_5" {{checked system.specificites.lente_5}}> Lente (5 tours)
+        </label>
+        <label title="Sur une R+, le tireur a droit à un second (et dernier) tir avec 1 Désavantage." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.rplus_2e_tir" {{checked system.specificites.rplus_2e_tir}}> R+ 2e tir
+        </label>
+        <label title="Arme instable. Échec majeur = bloquée. Échec critique = explose et cause D10 dégâts." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.poudre" {{checked system.specificites.poudre}}> Poudre
+        </label>
+        <label title="1 seule dose de poison requise au lieu de 3." style="display: flex; align-items: center; gap: 5px; cursor: help;">
+            <input type="checkbox" name="system.specificites.poison" {{checked system.specificites.poison}}> Empoisonnement facile
+        </label>
+    </div>
+    {{/if}}
+
+</div>

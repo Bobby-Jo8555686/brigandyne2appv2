@@ -1,0 +1,36 @@
+<div class="sheet-container">
+    {{!-- 1. EN-TÊTE (Header) --}}
+    {{> "systems/brigandyne2appv2/templates/actor/parts/header.hbs"}}
+
+    {{!-- 2. ONGLETS DE NAVIGATION (Tabs) --}}
+    {{> "systems/brigandyne2appv2/templates/actor/parts/tabs.hbs"}}
+
+    {{!-- 3. CORPS DE LA FICHE (Body) --}}
+    <section class="sheet-body">
+
+        {{!-- Onglet Caractéristiques & Compétences --}}
+        <div class="tab stats" data-tab="stats" style="display:block;">
+            {{> "systems/brigandyne2appv2/templates/actor/parts/stats.hbs"}}
+        </div>
+
+        {{!-- Onglet Inventaire & Équipement --}}
+        <div class="tab inventory" data-tab="inventory" style="display:none;">
+            {{> "systems/brigandyne2appv2/templates/actor/parts/inventory.hbs"}}
+        </div>
+
+        {{!-- Onglet Magie (Conditionnel : caché pour les Sbires) --}}
+        {{#if showMagicTab}}
+        <div class="tab magic" data-tab="magic" style="display:none;">
+            {{> "systems/brigandyne2appv2/templates/actor/parts/magic.hbs"}}
+        </div>
+        {{/if}}
+
+        {{!-- Onglet Biographie & Notes (Conditionnel) --}}
+        {{#if showBioTab}}
+        <div class="tab biography" data-tab="biography" style="display:none;">
+            {{> "systems/brigandyne2appv2/templates/actor/parts/biography.hbs"}}
+        </div>
+        {{/if}}
+
+    </section>
+</div>

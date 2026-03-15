@@ -1,0 +1,61 @@
+<div class="tab details" data-tab="details" style="display:block;">
+    <div class="item-grid">
+        <div class="form-group-item">
+            <label>Type</label>
+            <select name="system.type_atout">
+                {{selectOptions choixTypeAtout selected=system.type_atout}}
+            </select>
+        </div>
+        
+        {{#if (eq system.type_atout "Spécialité")}}
+        <div class="form-group-item col">
+            <label>Spécialité</label>
+            <input type="text" class="search-list" data-target="select[name='system.specialite']" placeholder="🔍 Taper pour filtrer..."/>
+            <select name="system.specialite" size="10" style="min-height: 180px;">
+                {{selectOptions specialitesList selected=system.specialite blank="-- Choisissez --"}}
+            </select>
+        </div>
+        {{/if}}
+
+        {{#if (eq system.type_atout "Talent")}}
+        <div class="form-group-item col">
+            <label>Talent</label>
+            <input type="text" class="search-list" data-target="select[name='system.talent']" placeholder="🔍 Taper pour filtrer..."/>
+            <select name="system.talent" size="10" style="min-height: 180px;">
+                {{selectOptions talentsList selected=system.talent blank="-- Choisissez --"}}
+            </select>
+        </div>
+        {{/if}}
+        
+        <div class="form-group-item">
+            <label>Compétence liée</label>
+            <select name="system.stat_liee">
+                {{selectOptions choixStats selected=system.stat_liee}}
+            </select>
+        </div>
+        {{#if (eq system.type_atout "Talent")}}
+        <div class="form-group-item">
+            <label title="Pour le talent Arme Fétiche : choisissez l'arme concernée">Arme liée</label>
+            <select name="system.armeLieeId">
+                <option value="">-- Aucune arme liée --</option>
+                {{#each actor.items}}
+                    {{#if (eq type "arme")}}
+                        <option value="{{id}}" {{#if (eq ../system.armeLieeId id)}}selected{{/if}}>{{name}}</option>
+                    {{/if}}
+                {{/each}}
+            </select>
+        </div>
+        {{/if}}
+        {{#if (eq system.type_atout "Spécialité")}}
+        <div class="form-group-item">
+            <label>Bonus</label>
+            <input type="number" name="system.bonus" value="{{system.bonus}}"/>
+        </div>
+        {{/if}}
+
+        <div class="form-group-item">
+            <label>Effet / Condition</label>
+            <input type="text" name="system.effet" value="{{system.effet}}"/>
+        </div>
+    </div>
+</div>
