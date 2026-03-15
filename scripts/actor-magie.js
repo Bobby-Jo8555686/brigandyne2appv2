@@ -33,58 +33,156 @@ export async function rollSpell(itemId) {
                 let selected = (k === 'vol') ? 'selected' : '';
                 statOptions += `<option value="${k}" ${selected}>${s.label}</option>`;
             }
-            targetHtml = `<div class="form-group" style="margin-bottom: 10px; padding: 10px; background: rgba(139, 0, 0, 0.1); border: 1px dashed #8b0000; border-radius: 5px;"><label style="font-weight: bold; color: #8b0000;">Cible : ${target.name}</label><div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;"><span style="font-size: 0.9em; color: #333;">Caractéristique de Résistance :</span><select id="targetResistStat" style="width: 50%;">${statOptions}</select></div></div>`;
+            targetHtml = `
+            <div class="b2-section" style="border-left: 3px solid #8c2a2a; margin-bottom: 10px;">
+                <div class="b2-dialog-row">
+                    <label class="b2-dialog-label" style="color: #9e2a2b;">Cible : ${target.name}</label>
+                    <div class="b2-dialog-controls" style="flex: 2;">
+                        <select id="targetResistStat" style="width: 100%;">${statOptions}</select>
+                    </div>
+                </div>
+            </div>`;
         } else if (isTour) {
-            targetHtml = `<div style="margin-bottom: 10px; padding: 10px; background: rgba(76, 175, 80, 0.1); border: 1px dashed #4CAF50; border-radius: 5px; text-align: center; color: #2E7D32; font-weight: bold;">Aucune cible sélectionnée.<br>Ce Tour réussira automatiquement (sans jet).</div>`;
+            targetHtml = `<div class="b2-dialog-row" style="border-left: 3px solid #4CAF50; background: rgba(76, 175, 80, 0.05); margin-bottom: 10px;"><div class="b2-dialog-label" style="color: #4CAF50; text-align: center; width: 100%;">Tour : Succès automatique (sans jet)</div></div>`;
         }
-        // --- GRILLE DES ATOUTS POUR LA MAGIE (FILTRE STRICT SUR "mag") ---
+
+        // --- GRILLE DES ATOUTS (SANG & ACIER - THÈME MAGIE) ---
         const relevantAtouts = this.items.filter(i => i.type === "atout" && i.system.stat_liee === "mag");
         let atoutsHtml = "";
         if (relevantAtouts.length > 0) {
-            atoutsHtml = `<div style="margin-bottom: 12px; background: rgba(103, 58, 183, 0.05); padding: 5px; border: 1px dashed #673ab7; border-radius: 3px;">
-                <div style="font-weight: bold; color: #673ab7; font-size: 0.85em; margin-bottom: 4px; border-bottom: 1px solid rgba(103,58,183,0.3); padding-bottom: 2px;">Spécialités & Talents :</div>
-                <div style="display: flex; flex-direction: column; gap: 2px;">`;
+            atoutsHtml = `<div class="b2-section" style="border-left: 3px solid #5e35b1; background: rgba(94, 53, 177, 0.05); padding-left: 5px; margin-bottom: 10px;">
+                <div class="b2-section-title" style="color: #7e57c2; border-bottom: 1px solid #311b5e; margin-bottom: 8px;"><i class="fas fa-book-dead"></i> Connaissances Arcaniques</div>`;
             for (let a of relevantAtouts) {
                 const bonus = Number(a.system.bonus) || 0;
-                const effetText = a.system.effet ? ` - <span style="color: #555;">${a.system.effet}</span>` : "";
+                let rawEffet = a.system.effet || "";
+                let shortEffet = rawEffet.length > 45 ? rawEffet.substring(0, 42) + "..." : rawEffet;
+
                 if (bonus > 0) {
-                    atoutsHtml += `<label style="display: flex; align-items: baseline; gap: 4px; cursor: pointer; font-size: 0.8em; line-height: 1.2; margin: 0; font-weight: normal; color: #111;"><input type="checkbox" class="atout-bonus" value="${bonus}" title="${a.system.effet}" style="margin: 0; width: 12px; height: 12px; transform: translateY(2px);"/><span><strong>${a.name} (+${bonus})</strong>${effetText}</span></label>`;
+                    atoutsHtml += `
+                    <div class="b2-dialog-row">
+                        <label class="b2-dialog-label" style="cursor: pointer; display: flex; flex-direction: column;">
+                            <span style="font-weight: bold; color: #7e57c2;">${a.name} (+${bonus})</span>
+                            <span style="font-size: 0.8em; color: #777; font-style: italic; font-weight: normal;">${shortEffet}</span>
+                        </label>
+                        <div class="b2-dialog-controls"><input type="checkbox" class="atout-bonus" value="${bonus}" title="${rawEffet}" /></div>
+                    </div>`;
                 } else {
-                    atoutsHtml += `<div style="padding-left: 16px; font-size: 0.8em; color: #333; line-height: 1.2; margin: 0;"><strong>${a.name}</strong> (Talent)${effetText}</div>`;
+                    atoutsHtml += `
+                    <div class="b2-dialog-row" style="opacity: 0.7;">
+                        <div class="b2-dialog-label" style="display: flex; flex-direction: column;">
+                            <span style="font-weight: bold; color: #888;">${a.name}</span>
+                            <span style="font-size: 0.8em; color: #555; font-style: italic; font-weight: normal;">${shortEffet}</span>
+                        </div>
+                    </div>`;
                 }
             }
-            atoutsHtml += `</div></div>`;
+            atoutsHtml += `</div>`;
         }
+
         let dialogContent = `
-            <div style="margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 5px; border-left: 3px solid #673ab7;">
-                <p><b>Utilisations d'aujourd'hui :</b> ${currentUses} / ${maxUses} (${typeSort}s)</p>
-                ${limitExceeded ? `<p style="color: darkred; font-weight: bold;">⚠️ Limite dépassée ! Ce sort va arracher ${extraCost} PV de votre énergie vitale.</p>` : `<p style="color: green;">Dans la limite autorisée.</p>`}
-            </div>
-            ${targetHtml}
-            ${atoutsHtml}
-            <div class="form-group" style="margin-bottom: 10px;">
-                <label style="font-weight: bold;">Difficulté du sort :</label>
-                <input type="number" id="spellDiff" value="${Number(sort.system.difficulte) || 0}" style="width: 100%; text-align: center;">
-            </div>
-            <div class="form-group" style="margin-bottom: 10px;">
-                <label style="font-weight: bold;">Avantages / Désav. circonstanciels :</label>
-                <input type="number" id="advC" value="0" style="width: 100%; text-align: center;">
-            </div>
-            <hr>
-            <h4 style="text-align: center; color: #8b0000; margin-bottom: 5px; font-family: 'Georgia', serif;">🩸 Magie du Sang 🩸</h4>
-            <div class="form-group" style="margin-bottom: 5px; display: flex; justify-content: space-between;">
-                <label>Sacrifier des PV (+1% par PV) :</label>
-                <input type="number" id="sacrificedPV" value="0" min="0" style="width: 50px; text-align: center;">
-            </div>
-            <div class="form-group" style="margin-bottom: 10px; display: flex; justify-content: space-between;">
-                <label>Sang d'être magique (Bonus x2) :</label>
-                <input type="checkbox" id="sangMagique">
-            </div>
-        `;
+        <div class="b2-dialog-window">
+            <form class="b2-dialog">
+                
+                <div class="b2-section" style="border-left: 3px solid ${limitExceeded ? '#b71c1c' : '#4a6491'}; background: ${limitExceeded ? 'rgba(183, 28, 28, 0.1)' : 'rgba(74, 100, 145, 0.05)'}; padding: 5px; margin-bottom: 10px;">
+                    <div class="b2-dialog-row" style="background: transparent; border: none; margin: 0; padding: 0;">
+                        <div class="b2-dialog-label" style="color: #ccc;">Utilisations (${typeSort}s) : ${currentUses} / ${maxUses}</div>
+                        <div class="b2-dialog-controls" style="font-weight: bold; color: ${limitExceeded ? '#ff5252' : '#85c1e9'};">
+                            ${limitExceeded ? `⚠️ Dépassement (-${extraCost} PV)` : `Énergie Stable`}
+                        </div>
+                    </div>
+                </div>
+
+                ${targetHtml}
+                ${atoutsHtml}
+                
+                <div class="b2-section">
+                    <div class="b2-dialog-row">
+                        <label class="b2-dialog-label" for="spellDiff">Difficulté native du sort :</label>
+                        <div class="b2-dialog-controls"><input type="number" id="spellDiff" value="${Number(sort.system.difficulte) || 0}" style="width: 50px;"></div>
+                    </div>
+                </div>
+
+                <div class="b2-section" style="background: rgba(0,0,0,0.6); padding-bottom: 0; border: 1px solid #111; margin-bottom: 10px;">
+                    <div class="b2-dialog-row" style="justify-content: center; flex-direction: column; gap: 8px; border: none; background: transparent;">
+                        <div class="b2-dialog-label" style="text-align: center; color: #888;">Désavantages / Avantages</div>
+                        <div class="b2-dialog-controls">
+                            <div class="b2-pips" data-target="advCirconstances" style="align-items: center; gap: 4px;">
+                                <div class="b2-pip neg" data-val="-3"><i class="fas fa-times"></i></div>
+                                <div class="b2-pip neg" data-val="-2"><i class="fas fa-times"></i></div>
+                                <div class="b2-pip neg" data-val="-1"><i class="fas fa-times"></i></div>
+                                <input type="number" id="advCirconstances" value="0" min="-5" max="5" style="width: 45px; height: 28px; font-size: 1.1em; margin: 0 5px;">
+                                <div class="b2-pip pos" data-val="1"><i class="fas fa-circle"></i></div>
+                                <div class="b2-pip pos" data-val="2"><i class="fas fa-circle"></i></div>
+                                <div class="b2-pip pos" data-val="3"><i class="fas fa-circle"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="b2-section" style="border-left: 3px solid #8b0000; background: rgba(139, 0, 0, 0.05); padding-left: 5px;">
+                    <div class="b2-section-title" style="color: #8b0000; border-bottom: 1px solid #4a0000; margin-bottom: 8px;"><i class="fas fa-tint"></i> Magie du Sang</div>
+                    
+                    <div class="b2-dialog-row">
+                        <label class="b2-dialog-label" for="sangMagique" style="color: #ffb74d;">Sang de Créature Magique (Bonus x2)</label>
+                        <div class="b2-dialog-controls"><input type="checkbox" id="sangMagique" /></div>
+                    </div>
+                    
+                    <div class="b2-dialog-row" style="justify-content: center; flex-direction: column; gap: 8px; border: none; background: transparent; padding-bottom: 0;">
+                        <div class="b2-dialog-label" style="text-align: center; color: #ffcccc;">Sacrifier des PV (+1% par PV)</div>
+                        <div class="b2-dialog-controls">
+                            <div class="b2-pips" data-target="sacrificedPV" style="align-items: center; gap: 4px;">
+                                <input type="number" id="sacrificedPV" value="0" min="0" max="20" style="width: 50px; height: 28px; font-size: 1.1em; margin: 0 5px;">
+                                <div class="b2-pip neg" data-val="1"><i class="fas fa-tint"></i></div>
+                                <div class="b2-pip neg" data-val="2"><i class="fas fa-tint"></i></div>
+                                <div class="b2-pip neg" data-val="3"><i class="fas fa-tint"></i></div>
+                                <div class="b2-pip neg" data-val="4"><i class="fas fa-tint"></i></div>
+                                <div class="b2-pip neg" data-val="5"><i class="fas fa-tint"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>`;
 
         new Dialog({
             title: `Grimoire : ${sort.name}`,
             content: dialogContent,
+            render: (html) => {
+            const updatePips = (inputId) => {
+                let input = html.find(`#${inputId}`);
+                let val = parseInt(input.val()) || 0;
+                let pipsContainer = html.find(`.b2-pips[data-target="${inputId}"]`);
+                
+                pipsContainer.find('.b2-pip').each(function() {
+                    let pipVal = parseInt($(this).data('val'));
+                    $(this).removeClass('active');
+                    // Allume les positifs si valeur > 0
+                    if (val > 0 && pipVal > 0 && pipVal <= val) $(this).addClass('active');
+                    // Allume les négatifs si valeur < 0
+                    if (val < 0 && pipVal < 0 && pipVal >= val) $(this).addClass('active');
+                });
+            };
+
+            html.find('.b2-pip').click(function() {
+                let targetId = $(this).closest('.b2-pips').data('target');
+                let input = html.find(`#${targetId}`);
+                let clickedVal = parseInt($(this).data('val'));
+                let currentVal = parseInt(input.val()) || 0;
+                
+                // Si on clique sur la case déjà active au max, ça remet à 0
+                input.val(clickedVal === currentVal ? 0 : clickedVal);
+                updatePips(targetId);
+            });
+
+            html.find('.b2-dialog-controls input[type="number"]').on('input change', function() { 
+                updatePips($(this).attr('id')); 
+            });
+            
+            html.find('.b2-pips').each(function() { 
+                updatePips($(this).data('target')); 
+            });
+            },
             buttons: {
                 roll: {
                     icon: '<i class="fas fa-magic"></i>',
@@ -95,10 +193,10 @@ export async function rollSpell(itemId) {
 
                         const options = {
                             spellDiff: parseInt(html.find('#spellDiff').val()) || 0,
-                            advC: parseInt(html.find('#advC').val()) || 0,
+                            advC: parseInt(html.find('#advCirconstances').val()) || 0,
                             sacrificedPV: Math.max(0, parseInt(html.find('#sacrificedPV').val()) || 0),
                             sangMagique: html.find('#sangMagique').is(':checked'),
-                            totalBonusAtouts: totalBonusAtouts, // <-- AJOUT DU BONUS ICI
+                            totalBonusAtouts: totalBonusAtouts, 
                             extraCost: extraCost,
                             typeSort: typeSort,
                             scoreIncantation: scoreIncantation,
