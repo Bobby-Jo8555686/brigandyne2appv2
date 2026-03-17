@@ -170,7 +170,8 @@ export class SortData extends foundry.abstract.TypeDataModel {
         return { 
             type_sort: new StringField({ initial: "sortilege" }), 
             domaine: new StringField({ initial: "" }), 
-            difficulte: new NumberField({ initial: 0, integer: true }), 
+            difficulte: new StringField({ initial: "0" }), 
+            difficulte_desc: new StringField({ initial: "" }),
             portee: new StringField({ initial: "Courte" }), 
             duree: new StringField({ initial: "" }), 
             resistance: new StringField({ initial: "" }), 
