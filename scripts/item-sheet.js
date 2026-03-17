@@ -265,9 +265,17 @@ export class BrigandyneItemSheet extends HandlebarsApplicationMixin(ItemSheetV2)
       context.choixTypeAtout = { "Spécialité": "Spécialité", "Talent": "Talent" };
       context.choixStats = { "": "- Aucune -", "com": "Combat", "cns": "Connaissances", "dis": "Discrétion", "end": "Endurance", "for": "Force", "hab": "Habileté", "mag": "Magie", "mou": "Mouvement", "per": "Perception", "soc": "Sociabilité", "sur": "Survie", "tir": "Tir", "vol": "Volonté" };
       context.choixTypeSort = { "sortilege": "Sortilège (Normal)", "tour": "Tour de Magie", "rituel": "Rituel (Action longue)" };
-      context.choixPortee = { "Contact": "Contact (1 m)", "Courte": "Courte (5 m)", "Moyenne": "Moyenne (20 m)", "Longue": "Longue (50 m)", "Extrême": "Extrême (100 m)", "Vue": "À vue", "Personnel": "Personnel" };
       context.choixAllonge = { "AA": "AA (Très longue / Piques)", "A": "A (Longue / Lances)", "B": "B (Assez longue)", "C": "C (Moyenne)", "D": "D (Assez courte)", "E": "E (Courte / Poignards)", "F": "F (Très courte / Mains nues)" };
-      context.choixPortee = { "courte": "Courte", "moyenne": "Moyenne", "longue": "Longue", "extreme": "Extrême" };
+      context.choixPortee = { "contact": "Contact", "courte": "Courte", "moyenne": "Moyenne", "longue": "Longue", "extreme": "Extrême", "vue": "À vue", "personnel": "Personnel" };
+      context.choixDifficulte = {
+          "+20": "+20",
+          "+10": "+10",
+          "0": "0",
+          "-10": "-10",
+          "-20": "-20",
+          "-30": "-30",
+          "spécial": "Spécial"
+      };
       context.choixCouverture = { "0": "Aucune couverture (0)", "1": "Bouclier (1 Désavantage au tireur)", "2": "Pavois (2 Désavantages au tireur)" };
       context.choixTypeArmure = { "armure": "Armure (Torse / Complète)", "bouclier": "Bouclier / Targe", "casque": "Casque / Heaume" };
 
