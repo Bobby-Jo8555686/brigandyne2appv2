@@ -635,3 +635,52 @@ body.vtt {
     font-family: inherit;
     box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
 }
+/* ========================================== */
+/* BOÎTES DE DIALOGUE (APP V2) - UTILITAIRES  */
+/* ========================================== */
+
+/* --- Conteneurs et Sections --- */
+.b2-dialog .b2-section-dark { background: rgba(0, 0, 0, 0.6); padding-bottom: 0; border: 1px solid #111; margin-bottom: 10px; }
+.b2-dialog .b2-row-centered { justify-content: center; flex-direction: column; gap: 8px; border: none; background: transparent; }
+.b2-dialog .b2-row-transparent { background: transparent; border: none; margin: 0; padding: 0; }
+
+/* --- Inputs et Pips --- */
+.b2-pip-input { width: 55px; height: 28px; font-size: 1.1em; margin: 0 5px; text-align: center; }
+.b2-pip-input-small { width: 45px; height: 28px; font-size: 1.1em; margin: 0 5px; text-align: center; }
+
+/* --- Thèmes Magie --- */
+.b2-dialog .theme-danger { border-left: 3px solid #b71c1c !important; background: rgba(183, 28, 28, 0.1) !important; padding: 5px; margin-bottom: 10px; }
+.b2-dialog .text-danger { color: #ff5252 !important; font-weight: bold; }
+.b2-dialog .theme-stable { border-left: 3px solid #4a6491 !important; background: rgba(74, 100, 145, 0.05) !important; padding: 5px; margin-bottom: 10px; }
+.b2-dialog .text-stable { color: #85c1e9 !important; font-weight: bold; }
+.b2-dialog .theme-blood { border-left: 3px solid #8b0000; background: rgba(139, 0, 0, 0.05); padding-left: 5px; }
+.b2-dialog .title-blood { color: #8b0000; border-bottom: 1px solid #4a0000; margin-bottom: 8px; }
+
+/* --- Thèmes Combat --- */
+.b2-dialog .title-combat { color: #8c2a2a; border-bottom: 1px solid #4a1515; margin-bottom: 8px; }
+.b2-dialog .theme-posture { background: rgba(91, 123, 140, 0.1); border-left: 3px solid #5b7b8c; }
+.b2-dialog .theme-nature { border-left: 3px solid #4a7c47; background: rgba(74, 124, 71, 0.05); padding-left: 5px; margin-bottom: 10px; }
+.b2-dialog .title-nature { color: #4a7c47; border-bottom: 1px solid #2e4d2c; margin-bottom: 8px; }
+.b2-dialog .theme-opposition { border-left: 3px solid #8c2a2a; margin-bottom: 10px; }
+
+/* --- Thème Sauvegarde --- */
+.b2-save-box { margin-bottom: 15px; background: rgba(255, 152, 0, 0.1); padding: 10px; border: 1px solid #ff9800; border-radius: 5px; text-align: center; }
+
+/* --- Couleurs de textes utilitaires --- */
+.text-gold { color: #d4af37 !important; }
+.text-grey { color: #888 !important; }
+.text-light-grey { color: #ccc !important; }
+.text-orange { color: #ffb74d !important; }
+.text-pink { color: #ffcccc !important; }
+.text-blue { color: #5b7b8c !important; }
+.text-red { color: #9e2a2b !important; }
+.text-brown { color: #c87a32 !important; }
+
+/* --- Utilitaires de positionnement --- */
+.text-center { text-align: center; }
+.font-bold { font-weight: bold; }
+.align-center { align-items: center; }
+.gap-4 { gap: 4px; }
+.pb-0 { padding-bottom: 0 !important; }
+.flex-2 { flex: 2; }
+.w-100 { width: 100%; }
