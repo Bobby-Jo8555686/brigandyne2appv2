@@ -40,42 +40,8 @@ export async function rollStat(statKey) {
             atoutsHtml += `</div>`;
         }
 
-        // --- CONTENU DE LA FENÊTRE ---
-        let dialogContent = `
-        <div class="b2-dialog-window">
-            <form class="b2-dialog">
-                ${target ? `
-                <div class="b2-section" style="border-left: 3px solid #8c2a2a; margin-bottom: 10px;">
-                    <div class="b2-dialog-row">
-                        <label class="b2-dialog-label" style="color: #9e2a2b;"><i class="fas fa-crosshairs"></i> Opposition face à ${target.name} :</label>
-                        <div class="b2-dialog-controls" style="flex: 2;">
-                            <select id="targetStat" style="width: 100%;">${statOptions}</select>
-                        </div>
-                    </div>
-                </div>` : ''}
-                
-                ${atoutsHtml}
-                
-                <div class="b2-section" style="background: rgba(0,0,0,0.6); padding-bottom: 0; border: 1px solid #111;">
-                    <div class="b2-dialog-row" style="justify-content: center; flex-direction: column; gap: 8px; border: none; background: transparent;">
-                        <div class="b2-dialog-label" style="text-align: center; color: #888;">Difficulté / Facilité</div>
-                        <div class="b2-dialog-controls">
-                            <div class="b2-pips" data-target="modDifficulte" style="align-items: center; gap: 4px;">
-                                <div class="b2-pip neg" data-val="-40"><i class="fas fa-minus"></i></div>
-                                <div class="b2-pip neg" data-val="-30"><i class="fas fa-minus"></i></div>
-                                <div class="b2-pip neg" data-val="-20"><i class="fas fa-minus"></i></div>
-                                <div class="b2-pip neg" data-val="-10"><i class="fas fa-minus"></i></div>
-                                <input type="number" id="modDifficulte" value="0" step="10" min="-40" max="40" style="width: 55px; height: 28px; font-size: 1.1em; margin: 0 5px;">
-                                <div class="b2-pip pos" data-val="10"><i class="fas fa-plus"></i></div>
-                                <div class="b2-pip pos" data-val="20"><i class="fas fa-plus"></i></div>
-                                <div class="b2-pip pos" data-val="30"><i class="fas fa-plus"></i></div>
-                                <div class="b2-pip pos" data-val="40"><i class="fas fa-plus"></i></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>`;
+        const templateData = { target, statOptions, atoutsHtml };
+        let dialogContent = await renderTemplate("systems/brigandyne2appv2/templates/dialog/stat-dialog.hbs", templateData);
 
         new Dialog({
             title: `Test de ${stat.label}`,
@@ -154,14 +120,8 @@ export async function rollStat(statKey) {
             atoutsHtml += `</div></div>`;
         }
 
-        let dialogContent = `
-        <form>
-            <div style="margin-bottom: 15px; background: rgba(255, 152, 0, 0.1); padding: 10px; border: 1px solid #ff9800; border-radius: 5px; text-align: center;">
-                <span style="color: #e65100; font-size: 1.1em;"><b>Jet de Sauvegarde</b></span><br>
-                <span style="color: #333;">Modificateur imposé : <b>${mod > 0 ? '+'+mod : mod}</b></span>
-            </div>
-            ${atoutsHtml}
-        </form>`;
+        const templateData = { mod, atoutsHtml };
+        let dialogContent = await renderTemplate("systems/brigandyne2appv2/templates/dialog/save-dialog.hbs", templateData);
 
         new Dialog({
             title: `Sauvegarde : ${stat.label}`,
