@@ -41,7 +41,7 @@ Hooks.once("init", async function() {
         scope: "world",
         config: true,
         type: Boolean,
-        default: false // <-- Décoché par défaut pour ton mode rapide !
+        default: false 
     });
 
     // ==========================================
@@ -217,19 +217,13 @@ Hooks.once("init", async function() {
                 let { winnerId, loserId } = payload;
 
                 let winnerActor = await fromUuid(winnerId);
-                if (!winnerActor) winnerActor = game.actors.get(winnerId);
+                // Si l'acteur vient du monde plutôt que d'une scène, on tente la récup classique
+                if (!winnerActor) winnerActor = game.actors.get(winnerId); 
 
                 let loserActor = null;
                 if (loserId) {
                     loserActor = await fromUuid(loserId);
                     if (!loserActor) loserActor = game.actors.get(loserId);
-                    
-                    if (loserActor && !loserActor.isToken && canvas.ready) {
-                        const currentTarget = Array.from(game.user.targets)[0];
-                        if (currentTarget && currentTarget.actor) {
-                            loserActor = currentTarget.actor;
-                        }
-                    }
                 }
 
                 if (!game.user.isGM && (!winnerActor || !winnerActor.isOwner)) {
