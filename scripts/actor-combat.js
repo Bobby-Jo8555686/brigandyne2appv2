@@ -2,6 +2,36 @@ export async function rollWeapon(itemId, extraOptions = {}) {
     const weapon = this.items.get(itemId);
     if (!weapon) return;
 
+    // --- FILET DE SÉCURITÉ UX : VÉRIFICATION DES CIBLES ---
+    if (game.user.targets.size === 0 && !extraOptions.targetId) {
+        const continuer = await new Promise((resolve) => {
+            new Dialog({
+                title: "⚠️ Aucune cible sélectionnée",
+                content: `
+                    <div style="text-align: center; padding: 10px; background: #151515; border: 1px solid #333; border-radius: 5px; margin-bottom: 10px;">
+                        <i class="fas fa-crosshairs" style="font-size: 3em; color: #8c2a2a; margin-bottom: 10px;"></i>
+                        <p style="font-size: 1.1em; font-weight: bold; color: #c87a32;">Vous attaquez dans le vide !</p>
+                        <p style="color: #ccc; font-size: 0.9em;">Avez-vous oublié de cibler votre adversaire avec la touche <b>'T'</b> (ou double-clic droit) ?</p>
+                    </div>`,
+                buttons: {
+                    cancel: {
+                        icon: '<i class="fas fa-times"></i>',
+                        label: "Annuler & Cibler",
+                        callback: () => resolve(false)
+                    },
+                    continue: {
+                        icon: '<i class="fas fa-blind"></i>',
+                        label: "Continuer à l'aveugle",
+                        callback: () => resolve(true)
+                    }
+                },
+                default: "cancel" 
+            }, { classes: ["dialog", "b2-dialog-window"] }).render(true);
+        });
+
+        if (!continuer) return; 
+    }
+
     const hasShield = this.items.some(i => i.type === "armure" && i.system.equipe && i.system.type_armure === "bouclier");
     const forIndice = this.system.stats.for.indice || 0;
     
@@ -137,103 +167,18 @@ export async function rollWeapon(itemId, extraOptions = {}) {
         allongeHtml = `<div class="b2-dialog-row" style="border-left: 3px solid #d4af37;"><label class="b2-dialog-label" for="bonusAllonge" style="color: #d4af37; font-size: 0.85em;">${allongeText}</label><div class="b2-dialog-controls"><input type="checkbox" id="bonusAllonge" ${allongeChecked} /></div></div>`;
     }
 
-    // --- CONSTRUCTION DU DIALOGUE HTML ---
-    let dialogContent = `
-    <div class="b2-dialog-window">
-        ${alerteTirRapide}
-        <form class="b2-dialog">
-            
-            <div class="b2-section">
-                <div class="b2-section-title" style="color: #8c2a2a; border-bottom: 1px solid #4a1515; margin-bottom: 8px;"><i class="fas fa-crosshairs"></i> Circonstances d'Attaque</div>
-                ${isDistance ? `
-                <div class="b2-dialog-row">
-                    <label class="b2-dialog-label" for="modTir">Difficulté du tir :</label>
-                    <div class="b2-dialog-controls" style="flex: 2;">
-                        <select id="modTir" style="width: 100%;">
-                            <option value="0">Normal (0)</option>
-                            <option value="10">Cible grande / immobile (+10)</option>
-                            <option value="-10">Cible petite / rapide / intempéries (-10)</option>
-                            <option value="-20">Longue portée / Couvert partiel (-20)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="b2-dialog-row"><label class="b2-dialog-label" for="cibleConsciente">Cible consciente du tir ?</label><div class="b2-dialog-controls"><input type="checkbox" id="cibleConsciente" checked /></div></div>
-                <div class="b2-dialog-row"><label class="b2-dialog-label" for="tirMelee" style="color: #9e2a2b;">Cible dans une mêlée</label><div class="b2-dialog-controls"><input type="checkbox" id="tirMelee" /></div></div>
-                <div class="b2-dialog-row"><label class="b2-dialog-label" for="tirBoutPortant">Tir à bout portant (+20)</label><div class="b2-dialog-controls"><input type="checkbox" id="tirBoutPortant" /></div></div>
-                ` : `
-                <div class="b2-dialog-row"><label class="b2-dialog-label" for="lancerArme" style="color: #5b7b8c;">Lancer l'arme (Test de Tir)</label><div class="b2-dialog-controls"><input type="checkbox" id="lancerArme" /></div></div>
-                <div class="b2-dialog-row"><label class="b2-dialog-label" for="sansRiposte" style="color: #9e2a2b;">Cible incapable de riposter</label><div class="b2-dialog-controls"><input type="checkbox" id="sansRiposte" ${forcedSansRiposte ? 'checked disabled' : ''} /></div></div>
-                ${specs.point_faible ? `<div class="b2-dialog-row"><label class="b2-dialog-label" for="cibleAterre" style="color: #9e2a2b;">La cible est à terre (Ignore Armure)</label><div class="b2-dialog-controls"><input type="checkbox" id="cibleAterre" /></div></div>` : ''}
-                ${specs.charge ? `<div class="b2-dialog-row"><label class="b2-dialog-label" for="attaqueCharge" style="color: #9e2a2b;">Attaque en Charge (+1 Dégât)</label><div class="b2-dialog-controls"><input type="checkbox" id="attaqueCharge" /></div></div>` : ''}
-                ${specs.espace ? `<div class="b2-dialog-row"><label class="b2-dialog-label" for="espaceExigu" style="color: #9e2a2b;">Lieu étroit (Manque d'espace)</label><div class="b2-dialog-controls"><input type="checkbox" id="espaceExigu" /></div></div>` : ''}
-                ${allongeHtml}
-                `}
-            </div>
+    // --- CONSTRUCTION DU DIALOGUE HTML VIA HANDLEBARS ---
+    const showDeuxArmes = !isDistance && !hasShield;
+    const hasTalentsCombo = talentsComboHtml !== "";
 
-            ${talentsComboHtml !== "" ? `
-            <div class="b2-section" style="border-left: 3px solid #4a7c47; background: rgba(74, 124, 71, 0.05); padding-left: 5px; margin-bottom: 10px;">
-                <div class="b2-section-title" style="color: #4a7c47; border-bottom: 1px solid #2e4d2c; margin-bottom: 8px;"><i class="fas fa-bolt"></i> Capacités Actives</div>
-                ${talentsComboHtml}
-            </div>` : ""}
-
-            ${atoutsHtml}
-
-            <div class="b2-section">
-                <div class="b2-section-title" style="color: #8c2a2a; border-bottom: 1px solid #4a1515; margin-bottom: 8px;"><i class="fas fa-chess-knight"></i> Posture & Ruse</div>
-                
-                ${!isDistance && !hasShield ? `
-                <div class="b2-dialog-row" style="background: rgba(91, 123, 140, 0.1); border-left: 3px solid #5b7b8c;">
-                    <label class="b2-dialog-label" style="color: #7296a8;">⚔️ Combat à 2 armes :</label>
-                    <div class="b2-dialog-controls">
-                        <label style="display:flex; align-items:center; gap:4px; font-size:0.9em; cursor:pointer; color: #aaa;"><input type="checkbox" id="deuxArmesDmg" /> +1 DGT</label>
-                        <label style="display:flex; align-items:center; gap:4px; font-size:0.9em; cursor:pointer; color: #aaa;"><input type="checkbox" id="deuxArmesDef" /> +1 DEF</label>
-                    </div>
-                </div>` : ''}
-
-                <div class="b2-dialog-row">
-                    <label class="b2-dialog-label" for="tactique">Posture de combat :</label>
-                    <div class="b2-dialog-controls" style="flex: 2;">
-                        <select id="tactique" style="width: 100%;">
-                            <option value="standard">Efficace (Standard)</option>
-                            ${!isDistance ? `
-                            <option value="force">En force (+${forIndice} DGT, 1 Désav.)</option>
-                            <option value="finesse">En finesse (DGT/2, 1 Avantage)</option>
-                            <option value="defensive">Sur la défensive (0 DGT, ${hasShield ? '3' : '2'} Avantages)</option>
-                            ` : ''}
-                            ${targetArmorType === "partielle" ? `<option value="viser5">🎯 Viser défaut (${targetArmorName}) : -5</option>` : ''}
-                            ${targetArmorType === "complete" ? `<option value="viser10">🎯 Viser défaut (${targetArmorName}) : -10</option>` : ''}
-                            ${targetArmorType === "none" ? `<option value="viser5">Viser: Armure partielle (-5)</option><option value="viser10">Viser: Armure complète (-10)</option>` : ''}
-                            <option value="viser15">Viser: Complète + 1 acc. (-15)</option>
-                            <option value="viser20">Viser: Complète + 2 acc. (-20)</option>
-                            <option value="multi">Attaques multiples (1 Désav.)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="b2-dialog-row">
-                    <label class="b2-dialog-label" for="tenterChifoumi" style="color: #c87a32;">Tenter un Coup Tordu</label>
-                    <div class="b2-dialog-controls"><input type="checkbox" id="tenterChifoumi" /></div>
-                </div>
-            </div>
-
-            <div class="b2-section" style="background: rgba(0,0,0,0.6); padding-bottom: 0; border: 1px solid #111;">
-                <div class="b2-dialog-row" style="justify-content: center; flex-direction: column; gap: 8px; border: none; background: transparent;">
-                    <div class="b2-dialog-label" style="text-align: center; color: #888;">Désavantages / Avantages</div>
-                    <div class="b2-dialog-controls">
-                        <div class="b2-pips" data-target="advCirconstances" style="align-items: center; gap: 4px;">
-                            <div class="b2-pip neg" data-val="-3"><i class="fas fa-times"></i></div>
-                            <div class="b2-pip neg" data-val="-2"><i class="fas fa-times"></i></div>
-                            <div class="b2-pip neg" data-val="-1"><i class="fas fa-times"></i></div>
-                            <input type="number" id="advCirconstances" value="${forcedAdv}" min="-5" max="5" style="width: 45px; height: 28px; font-size: 1.1em; margin: 0 5px;">
-                            <div class="b2-pip pos" data-val="1"><i class="fas fa-circle"></i></div>
-                            <div class="b2-pip pos" data-val="2"><i class="fas fa-circle"></i></div>
-                            <div class="b2-pip pos" data-val="3"><i class="fas fa-circle"></i></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>`;
+    const templateData = {
+        alerteTirRapide, isDistance, forcedSansRiposte, specs, allongeHtml, 
+        hasTalentsCombo, talentsComboHtml, atoutsHtml, showDeuxArmes, 
+        forIndice, hasShield, targetArmorType, targetArmorName, forcedAdv
+    };
+    
+    const templatePath = "systems/brigandyne2appv2/templates/dialog/combat-dialog.hbs";
+    let dialogContent = await renderTemplate(templatePath, templateData);
 
     new Dialog({
         title: `Attaque avec ${weapon.name}`,
