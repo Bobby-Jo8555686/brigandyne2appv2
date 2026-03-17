@@ -14,8 +14,17 @@
         {{#if isNotTour}}
         <div class="form-group-item">
             <label>Difficulté (Mod.)</label>
-            <input type="number" name="system.difficulte" value="{{system.difficulte}}"/>
+            <select name="system.difficulte">
+                {{selectOptions choixDifficulte selected=system.difficulte}}
+            </select>
         </div>
+        
+        {{#if (eq system.difficulte "spécial")}}
+        <div class="form-group-item" style="border-left: 2px solid #8e44ad; padding-left: 5px; background: rgba(142, 68, 173, 0.1); margin-top: 5px;">
+            <label style="color: #8e44ad;">Condition Spéciale</label>
+            <input type="text" name="system.difficulte_desc" value="{{system.difficulte_desc}}" placeholder="Ex: -10 par cible supplémentaire"/>
+        </div>
+        {{/if}}
         <div class="form-group-item">
             <label>Portée</label>
             <select name="system.portee">
