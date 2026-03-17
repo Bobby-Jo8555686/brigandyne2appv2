@@ -79,71 +79,18 @@ export async function rollSpell(itemId) {
             atoutsHtml += `</div>`;
         }
 
-        let dialogContent = `
-        <div class="b2-dialog-window">
-            <form class="b2-dialog">
-                
-                <div class="b2-section" style="border-left: 3px solid ${limitExceeded ? '#b71c1c' : '#4a6491'}; background: ${limitExceeded ? 'rgba(183, 28, 28, 0.1)' : 'rgba(74, 100, 145, 0.05)'}; padding: 5px; margin-bottom: 10px;">
-                    <div class="b2-dialog-row" style="background: transparent; border: none; margin: 0; padding: 0;">
-                        <div class="b2-dialog-label" style="color: #ccc;">Utilisations (${typeSort}s) : ${currentUses} / ${maxUses}</div>
-                        <div class="b2-dialog-controls" style="font-weight: bold; color: ${limitExceeded ? '#ff5252' : '#85c1e9'};">
-                            ${limitExceeded ? `⚠️ Dépassement (-${extraCost} PV)` : `Énergie Stable`}
-                        </div>
-                    </div>
-                </div>
+        // --- GESTION DE LA DIFFICULTÉ SPÉCIALE ---
+        let rawDiff = sort.system.difficulte ? sort.system.difficulte.toString().toLowerCase() : "";
+        let isDiffSpecial = (rawDiff === "spécial" || rawDiff === "special");
+        let baseDiff = isDiffSpecial ? 0 : (Number(sort.system.difficulte) || 0);
+        let diffDesc = sort.system.difficulte_desc || "Voir avec le MJ";
+        let labelDiff = isDiffSpecial 
+            ? `Diff. Spéciale <span style="font-size: 0.8em; color: #a68a24; font-style: italic;"><br>(${diffDesc})</span>` 
+            : `Difficulté native du sort`;
 
-                ${targetHtml}
-                ${atoutsHtml}
-                
-                <div class="b2-section">
-                    <div class="b2-dialog-row">
-                        <label class="b2-dialog-label" for="spellDiff">Difficulté native du sort :</label>
-                        <div class="b2-dialog-controls"><input type="number" id="spellDiff" value="${Number(sort.system.difficulte) || 0}" style="width: 50px;"></div>
-                    </div>
-                </div>
-
-                <div class="b2-section" style="background: rgba(0,0,0,0.6); padding-bottom: 0; border: 1px solid #111; margin-bottom: 10px;">
-                    <div class="b2-dialog-row" style="justify-content: center; flex-direction: column; gap: 8px; border: none; background: transparent;">
-                        <div class="b2-dialog-label" style="text-align: center; color: #888;">Désavantages / Avantages</div>
-                        <div class="b2-dialog-controls">
-                            <div class="b2-pips" data-target="advCirconstances" style="align-items: center; gap: 4px;">
-                                <div class="b2-pip neg" data-val="-3"><i class="fas fa-times"></i></div>
-                                <div class="b2-pip neg" data-val="-2"><i class="fas fa-times"></i></div>
-                                <div class="b2-pip neg" data-val="-1"><i class="fas fa-times"></i></div>
-                                <input type="number" id="advCirconstances" value="0" min="-5" max="5" style="width: 45px; height: 28px; font-size: 1.1em; margin: 0 5px;">
-                                <div class="b2-pip pos" data-val="1"><i class="fas fa-circle"></i></div>
-                                <div class="b2-pip pos" data-val="2"><i class="fas fa-circle"></i></div>
-                                <div class="b2-pip pos" data-val="3"><i class="fas fa-circle"></i></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="b2-section" style="border-left: 3px solid #8b0000; background: rgba(139, 0, 0, 0.05); padding-left: 5px;">
-                    <div class="b2-section-title" style="color: #8b0000; border-bottom: 1px solid #4a0000; margin-bottom: 8px;"><i class="fas fa-tint"></i> Magie du Sang</div>
-                    
-                    <div class="b2-dialog-row">
-                        <label class="b2-dialog-label" for="sangMagique" style="color: #ffb74d;">Sang de Créature Magique (Bonus x2)</label>
-                        <div class="b2-dialog-controls"><input type="checkbox" id="sangMagique" /></div>
-                    </div>
-                    
-                    <div class="b2-dialog-row" style="justify-content: center; flex-direction: column; gap: 8px; border: none; background: transparent; padding-bottom: 0;">
-                        <div class="b2-dialog-label" style="text-align: center; color: #ffcccc;">Sacrifier des PV (+1% par PV)</div>
-                        <div class="b2-dialog-controls">
-                            <div class="b2-pips" data-target="sacrificedPV" style="align-items: center; gap: 4px;">
-                                <input type="number" id="sacrificedPV" value="0" min="0" max="20" style="width: 50px; height: 28px; font-size: 1.1em; margin: 0 5px;">
-                                <div class="b2-pip neg" data-val="1"><i class="fas fa-tint"></i></div>
-                                <div class="b2-pip neg" data-val="2"><i class="fas fa-tint"></i></div>
-                                <div class="b2-pip neg" data-val="3"><i class="fas fa-tint"></i></div>
-                                <div class="b2-pip neg" data-val="4"><i class="fas fa-tint"></i></div>
-                                <div class="b2-pip neg" data-val="5"><i class="fas fa-tint"></i></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </form>
-        </div>`;
+        const templateData = { limitExceeded, typeSort, currentUses, maxUses, extraCost, targetHtml, atoutsHtml, isDiffSpecial, labelDiff, baseDiff };
+        const templatePath = "systems/brigandyne2appv2/templates/dialog/magie-dialog.hbs";
+        let dialogContent = await renderTemplate(templatePath, templateData);
 
         new Dialog({
             title: `Grimoire : ${sort.name}`,
