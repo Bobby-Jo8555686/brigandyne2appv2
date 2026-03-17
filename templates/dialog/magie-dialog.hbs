@@ -1,0 +1,73 @@
+<div class="b2-dialog-window">
+    <form class="b2-dialog">
+        
+        <div class="b2-section {{#if limitExceeded}}theme-danger{{else}}theme-stable{{/if}}">
+            <div class="b2-dialog-row b2-row-transparent">
+                <div class="b2-dialog-label text-light-grey">Utilisations ({{typeSort}}s) : {{currentUses}} / {{maxUses}}</div>
+                <div class="b2-dialog-controls font-bold {{#if limitExceeded}}text-danger{{else}}text-stable{{/if}}">
+                    {{#if limitExceeded}}⚠️ Dépassement (-{{extraCost}} PV){{else}}Énergie Stable{{/if}}
+                </div>
+            </div>
+        </div>
+
+        {{{targetHtml}}}
+        {{{atoutsHtml}}}
+        
+        <div class="b2-section b2-section-dark">
+            <div class="b2-dialog-row b2-row-centered">
+                <div class="b2-dialog-label text-center font-bold {{#if isDiffSpecial}}text-gold{{else}}text-grey{{/if}}">{{{labelDiff}}}</div>
+                <div class="b2-dialog-controls">
+                    <div class="b2-pips align-center gap-4" data-target="spellDiff">
+                        <div class="b2-pip neg" data-val="-30"><i class="fas fa-minus"></i></div>
+                        <div class="b2-pip neg" data-val="-20"><i class="fas fa-minus"></i></div>
+                        <div class="b2-pip neg" data-val="-10"><i class="fas fa-minus"></i></div>
+                        <input type="number" id="spellDiff" class="b2-pip-input" value="{{baseDiff}}" step="10" min="-50" max="50">
+                        <div class="b2-pip pos" data-val="10"><i class="fas fa-plus"></i></div>
+                        <div class="b2-pip pos" data-val="20"><i class="fas fa-plus"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="b2-section b2-section-dark">
+            <div class="b2-dialog-row b2-row-centered">
+                <div class="b2-dialog-label text-center text-grey">Désavantages / Avantages</div>
+                <div class="b2-dialog-controls">
+                    <div class="b2-pips align-center gap-4" data-target="advCirconstances">
+                        <div class="b2-pip neg" data-val="-3"><i class="fas fa-times"></i></div>
+                        <div class="b2-pip neg" data-val="-2"><i class="fas fa-times"></i></div>
+                        <div class="b2-pip neg" data-val="-1"><i class="fas fa-times"></i></div>
+                        <input type="number" id="advCirconstances" class="b2-pip-input-small" value="0" min="-5" max="5">
+                        <div class="b2-pip pos" data-val="1"><i class="fas fa-circle"></i></div>
+                        <div class="b2-pip pos" data-val="2"><i class="fas fa-circle"></i></div>
+                        <div class="b2-pip pos" data-val="3"><i class="fas fa-circle"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="b2-section theme-blood">
+            <div class="b2-section-title title-blood"><i class="fas fa-tint"></i> Magie du Sang</div>
+            
+            <div class="b2-dialog-row">
+                <label class="b2-dialog-label text-orange" for="sangMagique">Sang de Créature Magique (Bonus x2)</label>
+                <div class="b2-dialog-controls"><input type="checkbox" id="sangMagique" /></div>
+            </div>
+            
+            <div class="b2-dialog-row b2-row-centered pb-0">
+                <div class="b2-dialog-label text-center text-pink">Sacrifier des PV (+1% par PV)</div>
+                <div class="b2-dialog-controls">
+                    <div class="b2-pips align-center gap-4" data-target="sacrificedPV">
+                        <input type="number" id="sacrificedPV" class="b2-pip-input" value="0" min="0" max="20">
+                        <div class="b2-pip neg" data-val="1"><i class="fas fa-tint"></i></div>
+                        <div class="b2-pip neg" data-val="2"><i class="fas fa-tint"></i></div>
+                        <div class="b2-pip neg" data-val="3"><i class="fas fa-tint"></i></div>
+                        <div class="b2-pip neg" data-val="4"><i class="fas fa-tint"></i></div>
+                        <div class="b2-pip neg" data-val="5"><i class="fas fa-tint"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </form>
+</div>

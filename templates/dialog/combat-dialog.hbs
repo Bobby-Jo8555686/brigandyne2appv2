@@ -1,0 +1,100 @@
+<div class="b2-dialog-window">
+    {{{alerteTirRapide}}}
+    <form class="b2-dialog">
+        
+        <div class="b2-section">
+            <div class="b2-section-title title-combat"><i class="fas fa-crosshairs"></i> Circonstances d'Attaque</div>
+            
+            {{#if isDistance}}
+            <div class="b2-dialog-row">
+                <label class="b2-dialog-label" for="modTir">Difficulté du tir :</label>
+                <div class="b2-dialog-controls flex-2">
+                    <select id="modTir" class="w-100">
+                        <option value="0">Normal (0)</option>
+                        <option value="10">Cible grande / immobile (+10)</option>
+                        <option value="-10">Cible petite / rapide / intempéries (-10)</option>
+                        <option value="-20">Longue portée / Couvert partiel (-20)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="b2-dialog-row"><label class="b2-dialog-label" for="cibleConsciente">Cible consciente du tir ?</label><div class="b2-dialog-controls"><input type="checkbox" id="cibleConsciente" checked /></div></div>
+            <div class="b2-dialog-row"><label class="b2-dialog-label text-red" for="tirMelee">Cible dans une mêlée</label><div class="b2-dialog-controls"><input type="checkbox" id="tirMelee" /></div></div>
+            <div class="b2-dialog-row"><label class="b2-dialog-label" for="tirBoutPortant">Tir à bout portant (+20)</label><div class="b2-dialog-controls"><input type="checkbox" id="tirBoutPortant" /></div></div>
+            {{else}}
+            <div class="b2-dialog-row"><label class="b2-dialog-label text-blue" for="lancerArme">Lancer l'arme (Test de Tir)</label><div class="b2-dialog-controls"><input type="checkbox" id="lancerArme" /></div></div>
+            <div class="b2-dialog-row"><label class="b2-dialog-label text-red" for="sansRiposte">Cible incapable de riposter</label><div class="b2-dialog-controls"><input type="checkbox" id="sansRiposte" {{#if forcedSansRiposte}}checked disabled{{/if}} /></div></div>
+            {{#if specs.point_faible}}<div class="b2-dialog-row"><label class="b2-dialog-label text-red" for="cibleAterre">La cible est à terre (Ignore Armure)</label><div class="b2-dialog-controls"><input type="checkbox" id="cibleAterre" /></div></div>{{/if}}
+            {{#if specs.charge}}<div class="b2-dialog-row"><label class="b2-dialog-label text-red" for="attaqueCharge">Attaque en Charge (+1 Dégât)</label><div class="b2-dialog-controls"><input type="checkbox" id="attaqueCharge" /></div></div>{{/if}}
+            {{#if specs.espace}}<div class="b2-dialog-row"><label class="b2-dialog-label text-red" for="espaceExigu">Lieu étroit (Manque d'espace)</label><div class="b2-dialog-controls"><input type="checkbox" id="espaceExigu" /></div></div>{{/if}}
+            {{{allongeHtml}}}
+            {{/if}}
+        </div>
+
+        {{#if hasTalentsCombo}}
+        <div class="b2-section theme-nature">
+            <div class="b2-section-title title-nature"><i class="fas fa-bolt"></i> Capacités Actives</div>
+            {{{talentsComboHtml}}}
+        </div>
+        {{/if}}
+
+        {{{atoutsHtml}}}
+
+        <div class="b2-section">
+            <div class="b2-section-title title-combat"><i class="fas fa-chess-knight"></i> Posture & Ruse</div>
+            
+            {{#if showDeuxArmes}}
+            <div class="b2-dialog-row theme-posture">
+                <label class="b2-dialog-label text-blue">⚔️ Combat à 2 armes :</label>
+                <div class="b2-dialog-controls">
+                    <label style="display:flex; align-items:center; gap:4px; font-size:0.9em; cursor:pointer; color: #aaa;"><input type="checkbox" id="deuxArmesDmg" /> +1 DGT</label>
+                    <label style="display:flex; align-items:center; gap:4px; font-size:0.9em; cursor:pointer; color: #aaa;"><input type="checkbox" id="deuxArmesDef" /> +1 DEF</label>
+                </div>
+            </div>
+            {{/if}}
+
+            <div class="b2-dialog-row">
+                <label class="b2-dialog-label" for="tactique">Posture de combat :</label>
+                <div class="b2-dialog-controls flex-2">
+                    <select id="tactique" class="w-100">
+                        <option value="standard">Efficace (Standard)</option>
+                        {{#unless isDistance}}
+                        <option value="force">En force (+{{forIndice}} DGT, 1 Désav.)</option>
+                        <option value="finesse">En finesse (DGT/2, 1 Avantage)</option>
+                        <option value="defensive">Sur la défensive (0 DGT, {{#if hasShield}}3{{else}}2{{/if}} Avantages)</option>
+                        {{/unless}}
+                        
+                        {{#if (eq targetArmorType "partielle")}}<option value="viser5">🎯 Viser défaut ({{targetArmorName}}) : -5</option>{{/if}}
+                        {{#if (eq targetArmorType "complete")}}<option value="viser10">🎯 Viser défaut ({{targetArmorName}}) : -10</option>{{/if}}
+                        {{#if (eq targetArmorType "none")}}<option value="viser5">Viser: Armure partielle (-5)</option><option value="viser10">Viser: Armure complète (-10)</option>{{/if}}
+                        
+                        <option value="viser15">Viser: Complète + 1 acc. (-15)</option>
+                        <option value="viser20">Viser: Complète + 2 acc. (-20)</option>
+                        <option value="multi">Attaques multiples (1 Désav.)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="b2-dialog-row">
+                <label class="b2-dialog-label text-brown" for="tenterChifoumi">Tenter un Coup Tordu</label>
+                <div class="b2-dialog-controls"><input type="checkbox" id="tenterChifoumi" /></div>
+            </div>
+        </div>
+
+        <div class="b2-section b2-section-dark">
+            <div class="b2-dialog-row b2-row-centered">
+                <div class="b2-dialog-label text-center text-grey">Désavantages / Avantages</div>
+                <div class="b2-dialog-controls">
+                    <div class="b2-pips align-center gap-4" data-target="advCirconstances">
+                        <div class="b2-pip neg" data-val="-3"><i class="fas fa-times"></i></div>
+                        <div class="b2-pip neg" data-val="-2"><i class="fas fa-times"></i></div>
+                        <div class="b2-pip neg" data-val="-1"><i class="fas fa-times"></i></div>
+                        <input type="number" id="advCirconstances" class="b2-pip-input-small" value="{{forcedAdv}}" min="-5" max="5">
+                        <div class="b2-pip pos" data-val="1"><i class="fas fa-circle"></i></div>
+                        <div class="b2-pip pos" data-val="2"><i class="fas fa-circle"></i></div>
+                        <div class="b2-pip pos" data-val="3"><i class="fas fa-circle"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
