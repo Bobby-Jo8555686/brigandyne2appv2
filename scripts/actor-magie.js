@@ -149,7 +149,8 @@ export async function rollSpell(itemId) {
                             scoreIncantation: scoreIncantation,
                             isTour: isTour,
                             targetId: target ? target.id : null,
-                            targetResistStat: target ? html.find('#targetResistStat').val() : null
+                            targetResistStat: target ? html.find('#targetResistStat').val() : null,
+                            bonusMalusLibre: parseInt(html.find('#bonusMalusLibre').val()) || 0
                         };
                         await this._executeSpellRoll(sort, options);
                     }
@@ -197,7 +198,7 @@ export async function rollSpell(itemId) {
                 }
             }
 
-            let finalScore = baseScore + options.spellDiff + (options.advC * 10) + sacrificeBonus + 5 + modo + (options.totalBonusAtouts || 0); 
+            let finalScore = baseScore + options.spellDiff + (options.advC * 10) + sacrificeBonus + 5 + modo + (options.totalBonusAtouts || 0) + (options.bonusMalusLibre || 0); 
             
             let result; let roll = null;
             if (forcedResult !== null && forcedResult !== false) {
@@ -217,9 +218,10 @@ export async function rollSpell(itemId) {
             if (forcedResult !== null && forcedResult !== false) message += `<div style="background: rgba(212, 175, 55, 0.2); border: 1px dashed #d4af37; color: #d4af37; padding: 5px; text-align: center; font-weight: bold; margin-bottom: 5px; border-radius: 3px;">🪄 Jet inversé par un Talent !</div>`;
             
             let atoutsLabel = (options.totalBonusAtouts > 0) ? `<br><span style="color: #673ab7; font-size: 0.85em;">(Inclus +${options.totalBonusAtouts} Spécialités)</span>` : "";
-            
+            let libreLabel = (options.bonusMalusLibre !== 0) ? `<br><span style="color: #d4af37; font-size: 0.85em;">(Bonus/Malus : ${options.bonusMalusLibre > 0 ? '+'+options.bonusMalusLibre : options.bonusMalusLibre})</span>` : "";
+
             message += `<h3 style="color: #673ab7; text-align: center; border-bottom: 1px solid #673ab7; font-family: 'Georgia', serif; margin-bottom: 5px;">✨ ${sort.name}</h3>`;
-            message += `<p style="margin: 5px 0;"><b>Chances de succès :</b> ${finalScore}% ${atoutsLabel} ${targetLabel}</p>`;
+            message += `<p style="margin: 5px 0;"><b>Chances de succès :</b> ${finalScore}% ${atoutsLabel} ${targetLabel} ${libreLabel}</p>`;
             message += dureeStr;
             message += `<div style="text-align: center; font-size: 1.5em; font-weight: bold; margin: 10px 0;">Jet : ${result} ${isSuccess ? "✅" : "❌"}</div>`;
             
