@@ -296,7 +296,8 @@ export async function rollWeapon(itemId, extraOptions = {}) {
                         bonusAllonge: html.find('#bonusAllonge').is(':checked'),
                         attaqueCharge: html.find('#attaqueCharge').is(':checked'),
                         cibleAterre: html.find('#cibleAterre').is(':checked'),
-                        espaceExigu: html.find('#espaceExigu').is(':checked')
+                        espaceExigu: html.find('#espaceExigu').is(':checked'),
+                        bonusMalusLibre: parseInt(html.find('#bonusMalusLibre').val()) || 0
                     };
                     
                     await this._executeWeaponRoll(weapon, options);
@@ -328,7 +329,7 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
     let handicapLabels = [];
 
     if (handicaps.aveugle && isDistance) { scoreBase = 0; handicapLabels.push("Aveuglé"); }
-    let score = scoreBase + totalBonusAtouts;
+    let score = scoreBase + totalBonusAtouts + (options.bonusMalusLibre || 0);
     
     // SPÉCIFICITÉS DISTANCE : PRÉCISION
     if (isDistance) {
@@ -675,6 +676,7 @@ export async function _executeWeaponRoll(weapon, options, forcedResult = null) {
             <div class="b2-recap-line"><strong style="color:#e0e0e0;">Base (${statLabel}) :</strong> <span>${scoreBase}</span></div>
             ${totalBonusAtouts > 0 ? `<div class="b2-recap-line" style="color: #d4af37;"><strong>Bonus Spécialités :</strong> <span>+${totalBonusAtouts}</span></div>` : ''}
             ${tirBoutPortant ? `<div class="b2-recap-line" style="color: #85c1e9;"><strong>Bout Portant :</strong> <span>+20</span></div>` : ''}
+            ${options.bonusMalusLibre !== 0 ? `<div class="b2-recap-line" style="color: #d4af37;"><strong>Bonus/Malus libre :</strong> <span>${options.bonusMalusLibre > 0 ? '+'+options.bonusMalusLibre : options.bonusMalusLibre}</span></div>` : ''}
             ${(target || isDistance) && modo !== 0 ? `<div style="border:none; padding:0; margin:0;"><div class="b2-recap-line"><strong style="color:#e0e0e0;">MODO/Diff. :</strong> <span style="color:#ffcccc;">${modo > 0 ? '+'+modo : modo}</span></div><div style="font-size:0.8em; color:#888; text-align:right;">(${detailResistance})</div></div>` : ''}
             ${netAdv !== 0 ? `<div class="b2-recap-line"><strong style="color:#e0e0e0;">Avantages net (${netAdv}) :</strong> <span style="color:#85c1e9;">${bonusAvantage > 0 ? '+'+bonusAvantage : bonusAvantage}</span></div>` : ''}
             ${malusVisee !== 0 ? `<div class="b2-recap-line"><strong style="color:#e0e0e0;">Malus de Visée :</strong> <span style="color:#ffcccc;">${malusVisee}</span></div>` : ''}
