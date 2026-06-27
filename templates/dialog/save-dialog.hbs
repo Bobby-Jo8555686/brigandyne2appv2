@@ -4,4 +4,10 @@
         <span class="text-light-grey">Modificateur imposé : <b class="text-gold">{{#if (gt mod 0)}}+{{/if}}{{mod}}</b></span>
     </div>
     {{{atoutsHtml}}}
+    <div class="b2-save-box" style="margin-top: 10px; padding: 5px; border-color: #d4af37; background: rgba(212, 175, 55, 0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="text-gold font-bold font-09">Bonus / Malus libre (+/-)</label>
+            <input type="number" id="bonusMalusLibre" value="0" step="1" style="width: 50px; text-align: center; background: rgba(0,0,0,0.8); color: white; border: 1px solid #555; border-radius: 3px;">
+        </div>
+    </div>
 </form>
