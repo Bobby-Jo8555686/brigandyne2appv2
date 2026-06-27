@@ -480,7 +480,7 @@ Hooks.once("init", async function() {
                 try {
                     const options = JSON.parse(btn.dataset.options.replace(/&quot;/g, '"'));
                     const targetToken = options.targetId ? canvas.tokens.get(options.targetId) : null;
-                    await actor._executeStatRoll(btn.dataset.stat, targetToken, options.targetStatKey, options.modDifficulte, options.totalBonusAtouts, parseInt(btn.dataset.inverted));
+                    await actor._executeStatRoll(btn.dataset.stat, targetToken, options.targetStatKey, options.modDifficulte, options.totalBonusAtouts, parseInt(btn.dataset.inverted), options.bonusMalusLibre || 0);
                 } catch (err) { console.error(err); }
                 return;
             }
