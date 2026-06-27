@@ -199,8 +199,8 @@ export class BrigandyneActor extends Actor {
     async rollStat(statKey) {
         return rollStat.call(this, statKey); 
     }
-    async _executeStatRoll(statKey, target, targetStatKey, modDifficulte, totalBonusAtouts, forcedResult = null) {
-        return _executeStatRoll.call(this, statKey, target, targetStatKey, modDifficulte, totalBonusAtouts, forcedResult); 
+    async _executeStatRoll(statKey, target, targetStatKey, modDifficulte, totalBonusAtouts, forcedResult = null, bonusMalusLibre = 0) {
+        return _executeStatRoll.call(this, statKey, target, targetStatKey, modDifficulte, totalBonusAtouts, forcedResult, bonusMalusLibre); 
     }
     async rollSave(statKey, mod) {
         return rollSave.call(this, statKey, mod); 
@@ -235,8 +235,8 @@ export class BrigandyneActor extends Actor {
         return rollItem.call(this, itemId);
     }
 
-    async _executeItemRoll(item, statKey, modDifficulte, advC) {
-        return _executeItemRoll.call(this, item, statKey, modDifficulte, advC);
+    async _executeItemRoll(item, statKey, modDifficulte, advC, bonusMalusLibre = 0) {
+        return _executeItemRoll.call(this, item, statKey, modDifficulte, advC, bonusMalusLibre);
     }
     // ============================================
     // 5. MOTEUR D'ACTIVITÉS UNIVERSEL
